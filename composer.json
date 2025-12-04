@@ -1,0 +1,16 @@
+{
+    "name": "oraseswpdev/fcg-gofundme-sync",
+    "description": "WordPress plugin that syncs funds CPT with GoFundMe Pro (Classy) designations",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "oraseswpdev",
+            "email": "wpdev@orases.com"
+        }
+    ],
+    "require-dev": {
+        "php-stubs/wordpress-stubs": "^6.9",
+        "php-stubs/acf-pro-stubs": "^6.5"
+    }
+}

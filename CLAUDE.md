@@ -22,6 +22,7 @@ includes/
 **API Details:**
 - Base URL: `https://api.classy.org/2.0`
 - Token URL: `https://api.classy.org/oauth2/auth`
+- Documentation: `https://docs.classy.org/`
 - Uses client_credentials OAuth2 flow
 - Token cached in transient `gofundme_access_token`
 

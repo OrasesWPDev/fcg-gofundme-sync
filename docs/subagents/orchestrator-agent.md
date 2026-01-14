@@ -6,6 +6,38 @@
 
 ---
 
+## STOP - READ THIS FIRST
+
+Before doing ANYTHING else, understand these rules:
+
+### FORBIDDEN: These tools are OFF LIMITS for implementation code
+
+| Tool | Forbidden For | Allowed For |
+|------|---------------|-------------|
+| **Edit** | PHP, CSS, JS files in `includes/`, `assets/` | ONLY: `fcg-gofundme-sync.php` version bump, `docs/*.md` |
+| **Write** | ANY file in `includes/`, `assets/` | ONLY: `docs/*.md` files |
+| **Bash** | Running PHP code, testing | ONLY: git commands, rsync, ssh |
+
+### MANDATORY: Use Task tool for ALL implementation
+
+```
+YOU (Orchestrator) --[Task tool]--> Dev Agent --[Edit/Write]--> Code files
+```
+
+If you catch yourself typing `Edit` or `Write` for a PHP/CSS/JS file, STOP.
+Use `Task` to spawn a dev agent instead.
+
+---
+
+## Tool Permission Reality
+
+When running in background mode, Edit/Write/Bash tools may be DENIED.
+This is BY DESIGN - you should NOT be using them for implementation.
+
+The Task tool ALWAYS works. Use it.
+
+---
+
 ## CRITICAL: Delegation Required
 
 **You are a COORDINATOR, not an implementer.**
@@ -16,20 +48,24 @@
 | Running PHP lint | Testing Agent (via Task tool) |
 | Git operations | You (Orchestrator) |
 | rsync/SSH deployment | You (Orchestrator) |
-| Version bump edits | You (Orchestrator) |
+| Version bump edits | You (Orchestrator) - ONLY main plugin file header |
 | Documentation updates | You (Orchestrator) |
 
-**WRONG - Do NOT do this:**
+### Example: WRONG vs RIGHT
+
+**WRONG - This will FAIL:**
 ```
-Orchestrator uses Write tool to create class-admin-ui.php
+I'll use the Edit tool to add record_sync_error() to class-sync-poller.php
 ```
 
-**RIGHT - Do this instead:**
+**RIGHT - This WORKS:**
 ```
-Orchestrator spawns Task: "Read docs/subagents/dev-agent.md. Implement step 5.1 from docs/phase-5-implementation-plan.md"
+I'll spawn a dev agent using Task:
+"Read docs/subagents/dev-agent.md. Implement steps 6.1-6.3 from docs/phase-6-implementation-plan.md"
 ```
 
-Why? Delegating to dev agents:
+Why delegate?
+- Dev agents have full tool access
 - Keeps orchestrator context small
 - Allows parallel implementation
 - Matches the hierarchical agent pattern
@@ -81,24 +117,44 @@ Group implementation steps by parallelization potential:
 
 ### Step 4: Spawn Dev Agents
 
-**You MUST use the Task tool here. Do NOT write implementation code yourself.**
+#### PRE-FLIGHT CHECKLIST (Mandatory - Ask Yourself)
 
-Launch dev agents using the Task tool. **Spawn parallel agents in a SINGLE message.**
+Before proceeding, verify:
+1. Am I about to use the **Task** tool? (YES = correct)
+2. Am I about to use Edit/Write for PHP/CSS/JS? (YES = STOP, use Task instead)
+3. Have I grouped steps by which files they modify?
+4. Will I spawn parallel agents in a SINGLE message?
 
-**Lean prompt template:**
-```
-Read docs/subagents/project-context.md and docs/subagents/dev-agent.md.
-Then implement step {N.X} from docs/phase-{N}-implementation-plan.md.
+#### Spawning Syntax
+
+Use the Task tool with these parameters:
+- `description`: Short summary (e.g., "Implement Phase 6 sync-poller changes")
+- `prompt`: Instructions for the dev agent (see template below)
+- `subagent_type`: "general-purpose"
+
+**Prompt Template:**
+```text
+Read docs/subagents/dev-agent.md first.
+Then implement step(s) X.Y from docs/phase-X-implementation-plan.md.
+Target file: includes/filename.php
 ```
 
-**Example for Phase 5 (3 implementation groups):**
-```
-Task 1: "Read docs/subagents/dev-agent.md. Implement steps 5.1-5.6 (Admin UI class) from docs/phase-5-implementation-plan.md"
-Task 2: "Read docs/subagents/dev-agent.md. Implement step 5.8 (CSS file) from docs/phase-5-implementation-plan.md"
-Task 3: "Read docs/subagents/dev-agent.md. Implement step 5.9 (JS file) from docs/phase-5-implementation-plan.md"
-```
+#### Example: Phase 6 Delegation
 
-Wait for all dev agents to complete before proceeding.
+For Phase 6, spawn TWO parallel Task agents:
+
+**Task A** (sync-poller changes):
+- Description: "Phase 6 sync-poller error handling"
+- Prompt: "Read docs/subagents/dev-agent.md. Implement steps 6.1-6.4 from docs/phase-6-implementation-plan.md. These add error tracking, retry logic, poll() updates, and cli_retry command to class-sync-poller.php."
+
+**Task B** (admin-ui changes):
+- Description: "Phase 6 admin-ui notices"
+- Prompt: "Read docs/subagents/dev-agent.md. Implement step 6.5 from docs/phase-6-implementation-plan.md. Update show_sync_notices() in class-admin-ui.php."
+
+#### Wait for Completion
+
+Do NOT proceed until ALL spawned Task agents have completed.
+Read their output to verify success before continuing.
 
 **After dev agents complete:** You (orchestrator) handle version bump, git commit, deploy, and docs.
 

@@ -289,7 +289,6 @@ class FCG_GFM_Admin_UI {
     public function show_sync_notices(): void {
         $screen = get_current_screen();
 
-        // Only show on funds screens
         if (!$screen || $screen->post_type !== 'funds') {
             return;
         }
@@ -298,6 +297,7 @@ class FCG_GFM_Admin_UI {
         $error_posts = get_posts([
             'post_type' => 'funds',
             'posts_per_page' => -1,
+            'post_status' => 'any',
             'meta_query' => [
                 [
                     'key' => '_gofundme_sync_error',
@@ -309,17 +309,38 @@ class FCG_GFM_Admin_UI {
 
         $error_count = count($error_posts);
 
-        if ($error_count > 0) {
-            ?>
-            <div class="notice notice-error">
-                <p>
-                    <strong>GoFundMe Pro Sync:</strong>
-                    <?php echo esc_html($error_count); ?> fund(s) have sync errors.
-                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=funds&page=fcg-gfm-sync-settings')); ?>">View Settings</a>
-                </p>
-            </div>
-            <?php
+        if ($error_count === 0) {
+            return;
         }
+
+        // Count posts that have exceeded max retries
+        $max_retries_exceeded = 0;
+        foreach ($error_posts as $post_id) {
+            $attempts = (int) get_post_meta($post_id, '_gofundme_sync_attempts', true);
+            if ($attempts >= 3) {
+                $max_retries_exceeded++;
+            }
+        }
+
+        $class = $max_retries_exceeded > 0 ? 'notice-error' : 'notice-warning';
+        $message = sprintf(
+            '<strong>GoFundMe Pro Sync:</strong> %d fund(s) have sync errors.',
+            $error_count
+        );
+
+        if ($max_retries_exceeded > 0) {
+            $message .= sprintf(
+                ' <strong>%d require manual intervention</strong> (max retries exceeded).',
+                $max_retries_exceeded
+            );
+        }
+
+        $message .= sprintf(
+            ' <a href="%s">View Settings</a> | <code>wp fcg-sync retry</code>',
+            admin_url('edit.php?post_type=funds&page=fcg-gfm-sync-settings')
+        );
+
+        printf('<div class="notice %s"><p>%s</p></div>', esc_attr($class), $message);
     }
 
     /**

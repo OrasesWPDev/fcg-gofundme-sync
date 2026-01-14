@@ -34,6 +34,11 @@ class FCG_GFM_Sync_Poller {
     private const TRANSIENT_SYNCING = 'fcg_gfm_syncing_inbound';
 
     /**
+     * Maximum retry attempts before giving up
+     */
+    private const MAX_RETRY_ATTEMPTS = 3;
+
+    /**
      * API Client instance
      *
      * @var FCG_GFM_API_Client
@@ -68,6 +73,7 @@ class FCG_GFM_Sync_Poller {
             \WP_CLI::add_command('fcg-sync pull', [$this, 'cli_pull']);
             \WP_CLI::add_command('fcg-sync status', [$this, 'cli_status']);
             \WP_CLI::add_command('fcg-sync conflicts', [$this, 'cli_conflicts']);
+            \WP_CLI::add_command('fcg-sync retry', [$this, 'cli_retry']);
         }
     }
 
@@ -99,7 +105,14 @@ class FCG_GFM_Sync_Poller {
         }
 
         $designations = $result['data'];
-        $stats = ['processed' => 0, 'updated' => 0, 'skipped' => 0, 'orphaned' => 0];
+        $stats = [
+            'processed' => 0,
+            'updated' => 0,
+            'skipped' => 0,
+            'orphaned' => 0,
+            'errors' => 0,
+            'retried' => 0,
+        ];
 
         foreach ($designations as $designation) {
             $stats['processed']++;
@@ -112,26 +125,42 @@ class FCG_GFM_Sync_Poller {
                 continue;
             }
 
+            // Check if this post has a pending error
+            $has_error = get_post_meta($post_id, '_gofundme_sync_error', true);
+            if ($has_error) {
+                if (!$this->should_retry($post_id)) {
+                    $stats['skipped']++;
+                    continue;
+                }
+                $stats['retried']++;
+            }
+
             if (!$this->has_designation_changed($post_id, $designation)) {
                 $stats['skipped']++;
                 continue;
             }
 
             if ($this->should_apply_gfm_changes($post_id, $designation)) {
-                $this->apply_designation_to_post($post_id, $designation);
-                $stats['updated']++;
+                if ($this->sync_post_with_retry($post_id, $designation)) {
+                    $stats['updated']++;
+                } else {
+                    $stats['errors']++;
+                }
             } else {
                 $stats['skipped']++;
             }
         }
 
         $this->log(sprintf(
-            "Poll complete: %d processed, %d updated, %d skipped, %d orphaned",
+            "Poll complete: %d processed, %d updated, %d skipped, %d orphaned, %d errors, %d retried",
             $stats['processed'],
             $stats['updated'],
             $stats['skipped'],
-            $stats['orphaned']
+            $stats['orphaned'],
+            $stats['errors'],
+            $stats['retried']
         ));
+
         $this->set_last_poll_time();
     }
 
@@ -342,6 +371,128 @@ class FCG_GFM_Sync_Poller {
     }
 
     /**
+     * Retry failed syncs.
+     *
+     * ## OPTIONS
+     *
+     * [--force]
+     * : Retry even if max attempts exceeded.
+     *
+     * [--clear]
+     * : Clear all error states without retrying.
+     *
+     * ## EXAMPLES
+     *
+     *     wp fcg-sync retry
+     *     wp fcg-sync retry --force
+     *     wp fcg-sync retry --clear
+     *
+     * @param array $args       Positional arguments.
+     * @param array $assoc_args Associative arguments.
+     */
+    public function cli_retry(array $args, array $assoc_args): void {
+        $force = isset($assoc_args['force']);
+        $clear = isset($assoc_args['clear']);
+
+        // Find posts with sync errors
+        $posts = get_posts([
+            'post_type' => 'funds',
+            'posts_per_page' => -1,
+            'post_status' => 'any',
+            'meta_query' => [
+                [
+                    'key' => '_gofundme_sync_error',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ]);
+
+        if (empty($posts)) {
+            \WP_CLI::success('No failed syncs to retry');
+            return;
+        }
+
+        \WP_CLI::log(sprintf('Found %d post(s) with sync errors', count($posts)));
+
+        if ($clear) {
+            foreach ($posts as $post) {
+                $this->clear_sync_error($post->ID);
+                \WP_CLI::log("Cleared error for post {$post->ID}");
+            }
+            \WP_CLI::success('All errors cleared');
+            return;
+        }
+
+        // Get all designations for matching
+        $result = $this->api->get_all_designations();
+        if (!$result['success']) {
+            \WP_CLI::error("Failed to fetch designations: {$result['error']}");
+            return;
+        }
+
+        $designations_by_id = [];
+        foreach ($result['data'] as $designation) {
+            $designations_by_id[$designation['id']] = $designation;
+        }
+
+        $stats = ['retried' => 0, 'success' => 0, 'failed' => 0, 'skipped' => 0];
+
+        foreach ($posts as $post) {
+            $designation_id = get_post_meta($post->ID, '_gofundme_designation_id', true);
+            $attempts = (int) get_post_meta($post->ID, '_gofundme_sync_attempts', true);
+            $error = get_post_meta($post->ID, '_gofundme_sync_error', true);
+
+            \WP_CLI::log(sprintf(
+                'Post %d: %s (attempts: %d, error: %s)',
+                $post->ID,
+                $post->post_title,
+                $attempts,
+                $error
+            ));
+
+            if (!$force && $attempts >= self::MAX_RETRY_ATTEMPTS) {
+                \WP_CLI::warning("  Skipped: max retries exceeded (use --force to override)");
+                $stats['skipped']++;
+                continue;
+            }
+
+            if (!isset($designations_by_id[$designation_id])) {
+                \WP_CLI::warning("  Skipped: designation {$designation_id} not found in GFM");
+                $stats['skipped']++;
+                continue;
+            }
+
+            $designation = $designations_by_id[$designation_id];
+            $stats['retried']++;
+
+            if ($this->sync_post_with_retry($post->ID, $designation)) {
+                \WP_CLI::log("  Success: sync completed");
+                $stats['success']++;
+            } else {
+                \WP_CLI::warning("  Failed: sync error");
+                $stats['failed']++;
+            }
+        }
+
+        \WP_CLI::log('');
+        \WP_CLI::log(sprintf(
+            'Results: %d retried, %d success, %d failed, %d skipped',
+            $stats['retried'],
+            $stats['success'],
+            $stats['failed'],
+            $stats['skipped']
+        ));
+
+        if ($stats['failed'] === 0 && $stats['skipped'] === 0) {
+            \WP_CLI::success('All retries successful!');
+        } elseif ($stats['success'] > 0) {
+            \WP_CLI::success('Some retries successful');
+        } else {
+            \WP_CLI::warning('No retries successful');
+        }
+    }
+
+    /**
      * Get the timestamp of the last successful poll
      *
      * @return string|null MySQL datetime or null if never polled
@@ -388,6 +539,86 @@ class FCG_GFM_Sync_Poller {
     private function log(string $message): void {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('[FCG GoFundMe Sync] ' . $message);
+        }
+    }
+
+    /**
+     * Record a sync error for a post
+     *
+     * @param int $post_id Post ID
+     * @param string $error Error message
+     */
+    private function record_sync_error(int $post_id, string $error): void {
+        update_post_meta($post_id, '_gofundme_sync_error', $error);
+
+        $attempts = (int) get_post_meta($post_id, '_gofundme_sync_attempts', true);
+        update_post_meta($post_id, '_gofundme_sync_attempts', $attempts + 1);
+        update_post_meta($post_id, '_gofundme_sync_last_attempt', current_time('mysql'));
+
+        $this->log("Sync error for post {$post_id}: {$error} (attempt " . ($attempts + 1) . ")");
+    }
+
+    /**
+     * Clear sync error for a post (on successful sync)
+     *
+     * @param int $post_id Post ID
+     */
+    private function clear_sync_error(int $post_id): void {
+        delete_post_meta($post_id, '_gofundme_sync_error');
+        delete_post_meta($post_id, '_gofundme_sync_attempts');
+        delete_post_meta($post_id, '_gofundme_sync_last_attempt');
+    }
+
+    /**
+     * Check if a post should be retried
+     *
+     * @param int $post_id Post ID
+     * @return bool
+     */
+    private function should_retry(int $post_id): bool {
+        $attempts = (int) get_post_meta($post_id, '_gofundme_sync_attempts', true);
+
+        if ($attempts >= self::MAX_RETRY_ATTEMPTS) {
+            return false;
+        }
+
+        $last_attempt = get_post_meta($post_id, '_gofundme_sync_last_attempt', true);
+        if (!$last_attempt) {
+            return true;
+        }
+
+        $delay = $this->get_retry_delay($attempts);
+        $next_retry_time = strtotime($last_attempt) + $delay;
+
+        return time() >= $next_retry_time;
+    }
+
+    /**
+     * Get retry delay based on attempt count (exponential backoff)
+     *
+     * @param int $attempts Number of failed attempts
+     * @return int Delay in seconds
+     */
+    private function get_retry_delay(int $attempts): int {
+        // 5 min, 15 min, 45 min
+        return (int) (5 * 60 * pow(3, $attempts));
+    }
+
+    /**
+     * Attempt to sync a post with error handling
+     *
+     * @param int $post_id Post ID
+     * @param array $designation Designation data
+     * @return bool Success or failure
+     */
+    private function sync_post_with_retry(int $post_id, array $designation): bool {
+        try {
+            $this->apply_designation_to_post($post_id, $designation);
+            $this->clear_sync_error($post_id);
+            return true;
+        } catch (Exception $e) {
+            $this->record_sync_error($post_id, $e->getMessage());
+            return false;
         }
     }
 

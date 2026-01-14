@@ -97,7 +97,7 @@ docs/
 | 1 | Validation | ✅ Complete (`c55c8c3`) |
 | 2 | Polling Infrastructure | ✅ Complete (`fbbeb78`) |
 | 3 | Incoming Sync Logic | ✅ Complete (`a4e5183`) |
-| 4 | Conflict Detection | Planned |
+| 4 | Conflict Detection | ✅ Complete (`3fcf0de`) |
 | 5 | Admin UI | Planned |
 | 6 | Error Handling | Planned |
 

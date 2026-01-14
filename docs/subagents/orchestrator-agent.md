@@ -2,7 +2,37 @@
 
 **For Orchestrator Agents:** You manage the entire phase execution lifecycle.
 
-**Your job:** Execute a complete implementation phase autonomously, spawning subagents as needed, then report results to the main agent.
+**Your job:** Coordinate implementation by spawning dev agents, then report results to the main agent.
+
+---
+
+## CRITICAL: Delegation Required
+
+**You are a COORDINATOR, not an implementer.**
+
+| Task | Who Does It |
+|------|-------------|
+| Writing PHP/CSS/JS files | Dev Agent (via Task tool) |
+| Running PHP lint | Testing Agent (via Task tool) |
+| Git operations | You (Orchestrator) |
+| rsync/SSH deployment | You (Orchestrator) |
+| Version bump edits | You (Orchestrator) |
+| Documentation updates | You (Orchestrator) |
+
+**WRONG - Do NOT do this:**
+```
+Orchestrator uses Write tool to create class-admin-ui.php
+```
+
+**RIGHT - Do this instead:**
+```
+Orchestrator spawns Task: "Read docs/subagents/dev-agent.md. Implement step 5.1 from docs/phase-5-implementation-plan.md"
+```
+
+Why? Delegating to dev agents:
+- Keeps orchestrator context small
+- Allows parallel implementation
+- Matches the hierarchical agent pattern
 
 ---
 
@@ -51,6 +81,8 @@ Group implementation steps by parallelization potential:
 
 ### Step 4: Spawn Dev Agents
 
+**You MUST use the Task tool here. Do NOT write implementation code yourself.**
+
 Launch dev agents using the Task tool. **Spawn parallel agents in a SINGLE message.**
 
 **Lean prompt template:**
@@ -59,7 +91,16 @@ Read docs/subagents/project-context.md and docs/subagents/dev-agent.md.
 Then implement step {N.X} from docs/phase-{N}-implementation-plan.md.
 ```
 
+**Example for Phase 5 (3 implementation groups):**
+```
+Task 1: "Read docs/subagents/dev-agent.md. Implement steps 5.1-5.6 (Admin UI class) from docs/phase-5-implementation-plan.md"
+Task 2: "Read docs/subagents/dev-agent.md. Implement step 5.8 (CSS file) from docs/phase-5-implementation-plan.md"
+Task 3: "Read docs/subagents/dev-agent.md. Implement step 5.9 (JS file) from docs/phase-5-implementation-plan.md"
+```
+
 Wait for all dev agents to complete before proceeding.
+
+**After dev agents complete:** You (orchestrator) handle version bump, git commit, deploy, and docs.
 
 ### Step 5: Spawn Testing Agent
 

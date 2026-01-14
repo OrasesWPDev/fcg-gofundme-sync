@@ -33,22 +33,34 @@ Path: ~/sites/frederickcount/wp-content/plugins/fcg-gofundme-sync/
 
 **To Staging:**
 ```bash
-rsync -avz --delete \
+rsync -avz --delete --delete-excluded \
   --exclude='.git' \
   --exclude='.github' \
+  --exclude='.claude' \
+  --exclude='.idea' \
+  --exclude='.gitignore' \
   --exclude='node_modules' \
   --exclude='.DS_Store' \
+  --exclude='CLAUDE.md' \
+  --exclude='readme.txt' \
+  --exclude='docs/' \
   /Users/chadmacbook/projects/fcg/ \
   frederickc2stg@frederickc2stg.ssh.wpengine.net:~/sites/frederickc2stg/wp-content/plugins/fcg-gofundme-sync/
 ```
 
 **To Production:**
 ```bash
-rsync -avz --delete \
+rsync -avz --delete --delete-excluded \
   --exclude='.git' \
   --exclude='.github' \
+  --exclude='.claude' \
+  --exclude='.idea' \
+  --exclude='.gitignore' \
   --exclude='node_modules' \
   --exclude='.DS_Store' \
+  --exclude='CLAUDE.md' \
+  --exclude='readme.txt' \
+  --exclude='docs/' \
   /Users/chadmacbook/projects/fcg/ \
   frederickcount@frederickcount.ssh.wpengine.net:~/sites/frederickcount/wp-content/plugins/fcg-gofundme-sync/
 ```

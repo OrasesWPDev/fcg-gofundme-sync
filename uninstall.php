@@ -19,6 +19,9 @@ delete_transient('gofundme_access_token');
 // Clean up polling options
 delete_option('fcg_gfm_last_poll');
 
+// Clean up conflict log
+delete_option('fcg_gfm_conflict_log');
+
 /**
  * Note: We intentionally do NOT delete the post meta:
  * - _gofundme_designation_id

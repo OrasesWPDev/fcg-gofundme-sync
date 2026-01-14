@@ -65,8 +65,10 @@ EOF
 ### 6. Deploy to Staging
 
 ```bash
-rsync -avz --delete \
-  --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='.DS_Store' \
+rsync -avz --delete --delete-excluded \
+  --exclude='.git' --exclude='.github' --exclude='.claude' --exclude='.idea' \
+  --exclude='.gitignore' --exclude='node_modules' --exclude='.DS_Store' \
+  --exclude='CLAUDE.md' --exclude='readme.txt' --exclude='docs/' \
   /Users/chadmacbook/projects/fcg/ \
   frederickc2stg@frederickc2stg.ssh.wpengine.net:~/sites/frederickc2stg/wp-content/plugins/fcg-gofundme-sync/
 

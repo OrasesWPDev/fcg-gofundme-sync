@@ -1,0 +1,75 @@
+/**
+ * FCG GoFundMe Pro Sync Admin Styles
+ *
+ * @package FCG_GoFundMe_Sync
+ */
+
+/* Sync Status Column */
+.fcg-sync-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.fcg-sync-synced {
+    background: #d4edda;
+    color: #155724;
+}
+
+.fcg-sync-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.fcg-sync-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.fcg-sync-not-linked {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+/* Meta Box */
+.fcg-sync-meta-box p {
+    margin: 0 0 12px 0;
+}
+
+.fcg-sync-meta-box .fcg-sync-error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 8px;
+    border-radius: 3px;
+}
+
+.fcg-sync-now-btn .dashicons {
+    vertical-align: middle;
+    margin-right: 4px;
+    line-height: 1.4;
+}
+
+.fcg-sync-meta-box .spinner {
+    float: none;
+    margin-top: 0;
+}
+
+/* Settings Page */
+#fcg-sync-all .dashicons {
+    vertical-align: middle;
+    margin-right: 4px;
+    line-height: 1.4;
+}
+
+.wrap #fcg-sync-all + .spinner {
+    float: none;
+    margin-top: 0;
+}
+
+/* Conflicts Table */
+.wrap .widefat td,
+.wrap .widefat th {
+    vertical-align: middle;
+}

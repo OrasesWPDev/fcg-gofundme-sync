@@ -29,11 +29,23 @@ class FCG_GFM_Sync_Poller {
     private const CRON_INTERVAL = 'fcg_gfm_15min';
 
     /**
+     * Transient key for inbound sync flag
+     */
+    private const TRANSIENT_SYNCING = 'fcg_gfm_syncing_inbound';
+
+    /**
      * API Client instance
      *
      * @var FCG_GFM_API_Client
      */
     private FCG_GFM_API_Client $api;
+
+    /**
+     * Orphaned designations found during poll
+     *
+     * @var array
+     */
+    private array $orphaned_designations = [];
 
     /**
      * Constructor
@@ -75,7 +87,6 @@ class FCG_GFM_Sync_Poller {
      * Poll GoFundMe Pro for designation changes
      *
      * Called by WP-Cron every 15 minutes.
-     * Phase 2 scope: fetch and log only (no WordPress changes).
      */
     public function poll(): void {
         $result = $this->api->get_all_designations();
@@ -85,14 +96,50 @@ class FCG_GFM_Sync_Poller {
             return;
         }
 
-        $count = $result['total'];
-        $this->log("Poll complete: fetched {$count} designations");
+        $designations = $result['data'];
+        $stats = ['processed' => 0, 'updated' => 0, 'skipped' => 0, 'orphaned' => 0];
 
+        foreach ($designations as $designation) {
+            $stats['processed']++;
+
+            $post_id = $this->find_post_for_designation($designation);
+
+            if (!$post_id) {
+                $this->handle_orphan($designation);
+                $stats['orphaned']++;
+                continue;
+            }
+
+            if (!$this->has_designation_changed($post_id, $designation)) {
+                $stats['skipped']++;
+                continue;
+            }
+
+            if ($this->should_apply_gfm_changes($post_id, $designation)) {
+                $this->apply_designation_to_post($post_id, $designation);
+                $stats['updated']++;
+            } else {
+                $stats['skipped']++;
+            }
+        }
+
+        $this->log(sprintf(
+            "Poll complete: %d processed, %d updated, %d skipped, %d orphaned",
+            $stats['processed'],
+            $stats['updated'],
+            $stats['skipped'],
+            $stats['orphaned']
+        ));
         $this->set_last_poll_time();
     }
 
     /**
      * WP-CLI command to pull designations
+     *
+     * ## OPTIONS
+     *
+     * [--dry-run]
+     * : Show what would be synced without making changes.
      *
      * ## EXAMPLES
      *
@@ -121,15 +168,73 @@ class FCG_GFM_Sync_Poller {
         $designations = $result['data'];
         \WP_CLI::success("Fetched {$result['total']} designations");
 
-        // Display results (Phase 2 scope - just fetch and display)
+        $stats = ['processed' => 0, 'updated' => 0, 'skipped' => 0, 'orphaned' => 0];
+
         foreach ($designations as $designation) {
-            \WP_CLI::log(sprintf(
-                "  [%d] %s (active: %s)",
-                $designation['id'],
-                $designation['name'],
-                $designation['is_active'] ? 'yes' : 'no'
-            ));
+            $stats['processed']++;
+
+            $post_id = $this->find_post_for_designation($designation);
+
+            if (!$post_id) {
+                \WP_CLI::log(sprintf(
+                    "  [ORPHAN] %s (ID: %d) - no matching WP post",
+                    $designation['name'],
+                    $designation['id']
+                ));
+                $stats['orphaned']++;
+                continue;
+            }
+
+            $post = get_post($post_id);
+            $changed = $this->has_designation_changed($post_id, $designation);
+            $should_apply = $changed ? $this->should_apply_gfm_changes($post_id, $designation) : false;
+
+            if (!$changed) {
+                \WP_CLI::log(sprintf(
+                    "  [SKIP] %s (Post %d) - no changes",
+                    $designation['name'],
+                    $post_id
+                ));
+                $stats['skipped']++;
+                continue;
+            }
+
+            if (!$should_apply) {
+                \WP_CLI::log(sprintf(
+                    "  [CONFLICT] %s (Post %d) - WP modified after last sync, keeping WP version",
+                    $designation['name'],
+                    $post_id
+                ));
+                $stats['skipped']++;
+                continue;
+            }
+
+            if ($dry_run) {
+                \WP_CLI::log(sprintf(
+                    "  [WOULD UPDATE] %s (Post %d)",
+                    $designation['name'],
+                    $post_id
+                ));
+                $stats['updated']++;
+            } else {
+                $this->apply_designation_to_post($post_id, $designation);
+                \WP_CLI::log(sprintf(
+                    "  [UPDATED] %s (Post %d)",
+                    $designation['name'],
+                    $post_id
+                ));
+                $stats['updated']++;
+            }
         }
+
+        \WP_CLI::log('');
+        \WP_CLI::log(sprintf(
+            "Results: %d processed, %d updated, %d skipped, %d orphaned",
+            $stats['processed'],
+            $stats['updated'],
+            $stats['skipped'],
+            $stats['orphaned']
+        ));
 
         if (!$dry_run) {
             $this->set_last_poll_time();
@@ -154,6 +259,29 @@ class FCG_GFM_Sync_Poller {
     }
 
     /**
+     * Set the syncing inbound flag
+     */
+    private function set_syncing_flag(): void {
+        set_transient(self::TRANSIENT_SYNCING, true, 30); // 30 second TTL
+    }
+
+    /**
+     * Clear the syncing inbound flag
+     */
+    private function clear_syncing_flag(): void {
+        delete_transient(self::TRANSIENT_SYNCING);
+    }
+
+    /**
+     * Check if inbound sync is in progress
+     *
+     * @return bool
+     */
+    public static function is_syncing_inbound(): bool {
+        return (bool) get_transient(self::TRANSIENT_SYNCING);
+    }
+
+    /**
      * Log message with plugin prefix
      *
      * @param string $message Message to log
@@ -162,5 +290,148 @@ class FCG_GFM_Sync_Poller {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('[FCG GoFundMe Sync] ' . $message);
         }
+    }
+
+    /**
+     * Calculate hash for designation change detection
+     *
+     * @param array $designation Designation data
+     * @return string MD5 hash
+     */
+    private function calculate_designation_hash(array $designation): string {
+        $hashable = [
+            'name' => $designation['name'] ?? '',
+            'description' => $designation['description'] ?? '',
+            'is_active' => $designation['is_active'] ?? false,
+            'goal' => $designation['goal'] ?? 0,
+        ];
+        return md5(json_encode($hashable));
+    }
+
+    /**
+     * Find WordPress post for a designation
+     *
+     * @param array $designation Designation data
+     * @return int|null Post ID or null
+     */
+    private function find_post_for_designation(array $designation): ?int {
+        $external_ref = $designation['external_reference_id'] ?? null;
+
+        // Priority 1: external_reference_id is the WP post ID
+        if ($external_ref && is_numeric($external_ref)) {
+            $post = get_post((int) $external_ref);
+            if ($post && $post->post_type === 'funds') {
+                return $post->ID;
+            }
+        }
+
+        // Priority 2: Search by designation ID in post meta
+        $designation_id = $designation['id'];
+        $posts = get_posts([
+            'post_type' => 'funds',
+            'meta_key' => '_gofundme_designation_id',
+            'meta_value' => $designation_id,
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+        ]);
+
+        return !empty($posts) ? $posts[0]->ID : null;
+    }
+
+    /**
+     * Check if designation data has changed
+     *
+     * @param int $post_id Post ID
+     * @param array $designation Designation data
+     * @return bool
+     */
+    private function has_designation_changed(int $post_id, array $designation): bool {
+        $stored_hash = get_post_meta($post_id, '_gofundme_poll_hash', true);
+        $current_hash = $this->calculate_designation_hash($designation);
+        return $stored_hash !== $current_hash;
+    }
+
+    /**
+     * Check if GFM changes should be applied to WordPress
+     *
+     * @param int $post_id Post ID
+     * @param array $designation Designation data
+     * @return bool
+     */
+    private function should_apply_gfm_changes(int $post_id, array $designation): bool {
+        $last_sync = get_post_meta($post_id, '_gofundme_last_sync', true);
+        $post = get_post($post_id);
+
+        if (!$last_sync) {
+            return true; // Never synced, accept GFM data
+        }
+
+        // Check if WP was modified after last sync
+        $wp_modified = strtotime($post->post_modified_gmt);
+        $last_sync_time = strtotime($last_sync);
+
+        if ($wp_modified > $last_sync_time) {
+            // WordPress wins - skip GFM changes
+            $this->log("Conflict: Post {$post_id} modified after last sync, keeping WP version");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Apply designation changes to WordPress post
+     *
+     * @param int $post_id Post ID
+     * @param array $designation Designation data
+     */
+    private function apply_designation_to_post(int $post_id, array $designation): void {
+        $this->set_syncing_flag();
+
+        try {
+            $updates = [
+                'ID' => $post_id,
+                'post_title' => $designation['name'],
+            ];
+
+            // Update post status based on is_active
+            if (isset($designation['is_active'])) {
+                $current_status = get_post_status($post_id);
+                if ($designation['is_active'] && $current_status === 'draft') {
+                    $updates['post_status'] = 'publish';
+                } elseif (!$designation['is_active'] && $current_status === 'publish') {
+                    $updates['post_status'] = 'draft';
+                }
+            }
+
+            // Update description if present
+            if (!empty($designation['description'])) {
+                $updates['post_excerpt'] = $designation['description'];
+            }
+
+            wp_update_post($updates);
+
+            // Update meta
+            update_post_meta($post_id, '_gofundme_poll_hash', $this->calculate_designation_hash($designation));
+            update_post_meta($post_id, '_gofundme_sync_source', 'gofundme');
+            update_post_meta($post_id, '_gofundme_last_sync', current_time('mysql'));
+
+            $this->log("Applied GFM changes to post {$post_id}");
+        } finally {
+            $this->clear_syncing_flag();
+        }
+    }
+
+    /**
+     * Handle orphaned designation (no matching WP post)
+     *
+     * @param array $designation Designation data
+     */
+    private function handle_orphan(array $designation): void {
+        $this->orphaned_designations[] = [
+            'id' => $designation['id'],
+            'name' => $designation['name'],
+        ];
+        $this->log("Orphan found: designation {$designation['id']} ({$designation['name']}) has no WP post");
     }
 }

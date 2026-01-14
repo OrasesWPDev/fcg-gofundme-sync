@@ -23,11 +23,13 @@ delete_option('fcg_gfm_last_poll');
  * Note: We intentionally do NOT delete the post meta:
  * - _gofundme_designation_id
  * - _gofundme_last_sync
- * 
- * This preserves the mapping between WordPress posts and GoFundMe Pro 
+ * - _gofundme_poll_hash
+ * - _gofundme_sync_source
+ *
+ * This preserves the mapping between WordPress posts and GoFundMe Pro
  * designations in case the plugin is reinstalled or the data is needed
  * for manual reconciliation.
- * 
+ *
  * If you need to completely remove all plugin data, uncomment the code below:
  */
 
@@ -45,6 +47,20 @@ $wpdb->delete(
 $wpdb->delete(
     $wpdb->postmeta,
     ['meta_key' => '_gofundme_last_sync'],
+    ['%s']
+);
+
+// Delete all poll hash meta
+$wpdb->delete(
+    $wpdb->postmeta,
+    ['meta_key' => '_gofundme_poll_hash'],
+    ['%s']
+);
+
+// Delete all sync source meta
+$wpdb->delete(
+    $wpdb->postmeta,
+    ['meta_key' => '_gofundme_sync_source'],
     ['%s']
 );
 */

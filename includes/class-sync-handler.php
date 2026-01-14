@@ -74,6 +74,11 @@ class FCG_GFM_Sync_Handler {
      * @param bool $update Whether this is an update
      */
     public function on_save_fund(int $post_id, WP_Post $post, bool $update): void {
+        // Skip outbound sync during inbound sync (prevent loop)
+        if (FCG_GFM_Sync_Poller::is_syncing_inbound()) {
+            return;
+        }
+
         // Skip autosaves
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
             return;

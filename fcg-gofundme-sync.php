@@ -3,7 +3,7 @@
  * Plugin Name: FCG GoFundMe Pro Sync
  * Plugin URI: https://orases.com
  * Description: Syncs WordPress funds with GoFundMe Pro designations via API. Creates, updates, and deletes designations automatically when funds are modified.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Orases
  * Author URI: https://orases.com
  * License: GPL v2 or later
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('FCG_GFM_SYNC_VERSION', '1.0.0');
+define('FCG_GFM_SYNC_VERSION', '1.1.0');
 define('FCG_GFM_SYNC_PATH', plugin_dir_path(__FILE__));
 define('FCG_GFM_SYNC_URL', plugin_dir_url(__FILE__));
 
@@ -30,6 +30,9 @@ require_once FCG_GFM_SYNC_PATH . 'includes/class-api-client.php';
 
 // Load the sync handler
 require_once FCG_GFM_SYNC_PATH . 'includes/class-sync-handler.php';
+
+// Load the sync poller
+require_once FCG_GFM_SYNC_PATH . 'includes/class-sync-poller.php';
 
 /**
  * Check if a credential is available via env var or constant
@@ -63,6 +66,9 @@ function fcg_gfm_sync_init() {
 
     // Initialize the sync handler
     new FCG_GFM_Sync_Handler();
+
+    // Initialize the sync poller
+    new FCG_GFM_Sync_Poller();
 }
 add_action('plugins_loaded', 'fcg_gfm_sync_init');
 
@@ -109,7 +115,10 @@ function fcg_gfm_sync_missing_org_notice() {
  * Plugin activation
  */
 function fcg_gfm_sync_activate() {
-    // Nothing to do on activation - credentials must be in wp-config.php
+    // Schedule polling cron if not already scheduled
+    if (!wp_next_scheduled('fcg_gofundme_sync_poll')) {
+        wp_schedule_event(time(), 'fcg_gfm_15min', 'fcg_gofundme_sync_poll');
+    }
 }
 register_activation_hook(__FILE__, 'fcg_gfm_sync_activate');
 
@@ -117,6 +126,12 @@ register_activation_hook(__FILE__, 'fcg_gfm_sync_activate');
  * Plugin deactivation
  */
 function fcg_gfm_sync_deactivate() {
+    // Unschedule polling cron
+    $timestamp = wp_next_scheduled('fcg_gofundme_sync_poll');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'fcg_gofundme_sync_poll');
+    }
+
     // Clean up transients
     delete_transient('gofundme_access_token');
 }

@@ -255,7 +255,40 @@ class FCG_GFM_API_Client {
     public function get_designation($designation_id): array {
         return $this->request('GET', "/designations/{$designation_id}");
     }
-    
+
+    /**
+     * Get all designations for the organization with pagination.
+     *
+     * @param int $per_page Results per page (default 100, max 100)
+     * @return array {success: bool, data: array|null, error: string|null, total: int}
+     */
+    public function get_all_designations(int $per_page = 100): array {
+        $all_designations = [];
+        $page = 1;
+
+        do {
+            $endpoint = "/organizations/{$this->org_id}/designations?page={$page}&per_page={$per_page}";
+            $result = $this->request('GET', $endpoint);
+
+            if (!$result['success']) {
+                return $result; // Return error immediately
+            }
+
+            $data = $result['data'];
+            $all_designations = array_merge($all_designations, $data['data'] ?? []);
+
+            $has_more = $page < ($data['last_page'] ?? 1);
+            $page++;
+
+        } while ($has_more);
+
+        return [
+            'success' => true,
+            'data' => $all_designations,
+            'total' => count($all_designations),
+        ];
+    }
+
     /**
      * Log error message
      * 

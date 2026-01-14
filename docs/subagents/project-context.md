@@ -98,7 +98,7 @@ docs/
 | 2 | Polling Infrastructure | ✅ Complete (`fbbeb78`) |
 | 3 | Incoming Sync Logic | ✅ Complete (`a4e5183`) |
 | 4 | Conflict Detection | ✅ Complete (`3fcf0de`) |
-| 5 | Admin UI | Planned |
+| 5 | Admin UI | ✅ Complete (`b020027`) |
 | 6 | Error Handling | Planned |
 
 ---

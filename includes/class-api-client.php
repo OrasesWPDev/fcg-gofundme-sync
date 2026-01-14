@@ -51,11 +51,36 @@ class FCG_GFM_API_Client {
     
     /**
      * Constructor
+     *
+     * Credentials are loaded with priority:
+     * 1. Environment variables (recommended for WP Engine)
+     * 2. PHP constants in wp-config.php (fallback)
      */
     public function __construct() {
-        $this->client_id = defined('GOFUNDME_CLIENT_ID') ? GOFUNDME_CLIENT_ID : '';
-        $this->client_secret = defined('GOFUNDME_CLIENT_SECRET') ? GOFUNDME_CLIENT_SECRET : '';
-        $this->org_id = defined('GOFUNDME_ORG_ID') ? GOFUNDME_ORG_ID : '';
+        $this->client_id = $this->get_credential('GOFUNDME_CLIENT_ID');
+        $this->client_secret = $this->get_credential('GOFUNDME_CLIENT_SECRET');
+        $this->org_id = $this->get_credential('GOFUNDME_ORG_ID');
+    }
+
+    /**
+     * Get credential from environment variable or constant
+     *
+     * @param string $name Credential name
+     * @return string Credential value or empty string
+     */
+    private function get_credential(string $name): string {
+        // Priority 1: Environment variable (WP Engine User Portal)
+        $env_value = getenv($name);
+        if ($env_value !== false && $env_value !== '') {
+            return $env_value;
+        }
+
+        // Priority 2: PHP constant (wp-config.php)
+        if (defined($name)) {
+            return constant($name);
+        }
+
+        return '';
     }
     
     /**

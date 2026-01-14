@@ -1,3 +1,21 @@
 .DS_Store
 *.log
 .idea/
+
+# Claude Code local settings and hookify rules (may contain sensitive patterns)
+.claude/*.local.md
+.claude/settings.local.json
+
+# Environment and credential files
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*

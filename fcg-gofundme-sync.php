@@ -32,21 +32,35 @@ require_once FCG_GFM_SYNC_PATH . 'includes/class-api-client.php';
 require_once FCG_GFM_SYNC_PATH . 'includes/class-sync-handler.php';
 
 /**
+ * Check if a credential is available via env var or constant
+ *
+ * @param string $name Credential name
+ * @return bool
+ */
+function fcg_gfm_has_credential(string $name): bool {
+    $env_value = getenv($name);
+    if ($env_value !== false && $env_value !== '') {
+        return true;
+    }
+    return defined($name) && constant($name) !== '';
+}
+
+/**
  * Initialize the plugin
  */
 function fcg_gfm_sync_init() {
-    // Check for required credentials
-    if (!defined('GOFUNDME_CLIENT_ID') || !defined('GOFUNDME_CLIENT_SECRET')) {
+    // Check for required credentials (env vars or constants)
+    if (!fcg_gfm_has_credential('GOFUNDME_CLIENT_ID') || !fcg_gfm_has_credential('GOFUNDME_CLIENT_SECRET')) {
         add_action('admin_notices', 'fcg_gfm_sync_missing_credentials_notice');
         return;
     }
-    
+
     // Check for required organization ID
-    if (!defined('GOFUNDME_ORG_ID')) {
+    if (!fcg_gfm_has_credential('GOFUNDME_ORG_ID')) {
         add_action('admin_notices', 'fcg_gfm_sync_missing_org_notice');
         return;
     }
-    
+
     // Initialize the sync handler
     new FCG_GFM_Sync_Handler();
 }
@@ -62,13 +76,14 @@ function fcg_gfm_sync_missing_credentials_notice() {
     ?>
     <div class="notice notice-warning">
         <p>
-            <strong>FCG GoFundMe Pro Sync:</strong> 
-            API credentials not configured. Add these constants to <code>wp-config.php</code>:
+            <strong>FCG GoFundMe Pro Sync:</strong>
+            API credentials not configured. Set environment variables in WP Engine User Portal:
         </p>
-        <pre style="background: #f5f5f5; padding: 10px; margin: 10px 0;">
-define('GOFUNDME_CLIENT_ID', 'your_client_id');
-define('GOFUNDME_CLIENT_SECRET', 'your_client_secret');
-define('GOFUNDME_ORG_ID', 'your_org_id');</pre>
+        <ul style="margin: 10px 0 10px 20px; list-style: disc;">
+            <li><code>GOFUNDME_CLIENT_ID</code></li>
+            <li><code>GOFUNDME_CLIENT_SECRET</code></li>
+            <li><code>GOFUNDME_ORG_ID</code></li>
+        </ul>
     </div>
     <?php
 }
@@ -83,10 +98,9 @@ function fcg_gfm_sync_missing_org_notice() {
     ?>
     <div class="notice notice-warning">
         <p>
-            <strong>FCG GoFundMe Pro Sync:</strong> 
-            Organization ID not configured. Add this constant to <code>wp-config.php</code>:
+            <strong>FCG GoFundMe Pro Sync:</strong>
+            Organization ID not configured. Set <code>GOFUNDME_ORG_ID</code> environment variable in WP Engine User Portal.
         </p>
-        <pre style="background: #f5f5f5; padding: 10px; margin: 10px 0;">define('GOFUNDME_ORG_ID', 'your_org_id');</pre>
     </div>
     <?php
 }

@@ -27,12 +27,23 @@ includes/
 
 ## Configuration
 
-Plugin requires these constants in wp-config.php:
-```php
-define('GOFUNDME_CLIENT_ID', 'your_client_id');
-define('GOFUNDME_CLIENT_SECRET', 'your_client_secret');
-define('GOFUNDME_ORG_ID', 'your_org_id');
-```
+**IMPORTANT:** Never store credentials in this file or the codebase.
+
+Plugin reads credentials from environment variables (recommended) or wp-config.php constants:
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `GOFUNDME_CLIENT_ID` | OAuth2 Client ID from GoFundMe Pro |
+| `GOFUNDME_CLIENT_SECRET` | OAuth2 Client Secret from GoFundMe Pro |
+| `GOFUNDME_ORG_ID` | Organization ID from GoFundMe Pro |
+
+**WP Engine Setup (Recommended):**
+1. Log into WP Engine User Portal
+2. Navigate to your environment (Staging or Production)
+3. Go to "Environment Variables" section
+4. Add each variable with the appropriate values for that environment
+
+**Priority:** Environment variables take precedence over wp-config.php constants
 
 ## Requirements
 
@@ -59,3 +70,48 @@ define('GOFUNDME_ORG_ID', 'your_org_id');
 ## Debugging
 
 Enable `WP_DEBUG` to see sync operations logged to PHP error log with prefix `[FCG GoFundMe Sync]`.
+
+## Live Site SSH Access (WP Engine - Production)
+
+- **SSH:** `frederickcount@frederickcount.ssh.wpengine.net`
+- **Site Path:** `~/sites/frederickcount`
+- **API:** Production GoFundMe Pro credentials (set in WP Engine env vars)
+
+## Staging Environment (WP Engine)
+
+- **SSH:** `frederickc2stg@frederickc2stg.ssh.wpengine.net`
+- **Site Path:** `~/sites/frederickc2stg`
+- **API:** Sandbox GoFundMe Pro credentials (set in WP Engine env vars)
+- **Purpose:** Primary development and testing environment for current phase
+
+## Local Development Environment
+
+- **Path:** `/Users/chadmacbook/Local Sites/frederick-county-gives/app/public`
+- **Platform:** Local by Flywheel
+- **Status:** NOT USED for current development phase
+- **Note:** All development and testing done on WP Engine Staging with Sandbox API
+
+## Security Guidelines
+
+**NEVER commit or store in this repository:**
+- API credentials (client IDs, secrets, tokens)
+- Organization IDs
+- Any sensitive configuration values
+
+**Credentials are managed via:**
+- WP Engine User Portal → Environment Variables (per environment)
+- Each environment (staging/production) has its own credentials
+
+## Development Workflow
+
+**IMPORTANT:** Follow this process for ALL code changes:
+
+1. **Pull latest main** - Ensure local main branch is up to date with remote
+2. **Create feature branch** - Branch off main for any new work
+3. **Make changes** - Implement the requested functionality
+4. **Update plugin version** - Bump version in main plugin file header if releasing
+5. **Deploy to Staging** - Deploy plugin to WP Engine Staging via SSH for testing with sandbox API
+6. **STOP and wait for user approval** - Do NOT push to repo until user confirms testing is complete
+7. **Push to repo** - Only after explicit user approval
+
+**Current Phase:** All development and testing on WP Engine Staging (no local environment)

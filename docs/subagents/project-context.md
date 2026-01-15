@@ -101,7 +101,7 @@ docs/
 | 5 | Admin UI | ✅ Complete (`b020027`) |
 | 6 | Error Handling | ✅ Complete (`5b293ca`) |
 | C0 | Fix Designations | ✅ Complete (`341dc63`) - Added push command, synced 855 funds |
-| C1 | Campaign API Methods | ✅ Complete (`7337ce2`) - 5 CRUD methods, meta constants, v2.0.0 |
+| C1 | Campaign API Methods | ✅ Complete (`008aef9`) - 5 CRUD methods, meta constants, v2.0.0 |
 
 ---
 
@@ -121,48 +121,66 @@ docs/
 
 ## Agent Architecture
 
-Phase execution uses a hierarchical agent pattern with **enforced tool restrictions**.
+Phase execution uses a hierarchical agent pattern with **hook-enforced tool restrictions**.
 
 ### Agent Hierarchy
 
 ```
 Main Agent
     ↓
-Task(orchestrator)  →  Read, Glob, Grep, Task only
+    Creates .claude/orchestrator-mode marker
     ↓
-    ├── Task(dev-agent)      →  Read, Write, Edit, Bash, Glob, Grep
-    ├── Task(testing-agent)  →  Read, Bash, Glob, Grep
-    └── Task(deploy-agent)   →  Read, Bash, Glob, Grep
+Task(general-purpose) with orchestrator instructions
+    ↓                   (Edit/Write/Bash BLOCKED by hook)
+    ├── Task(dev-agent)      →  Full tools (implements code)
+    ├── Task(testing-agent)  →  Read-only (reviews code)
+    └── Task(deploy-agent)   →  Bash/SSH (commits/deploys)
+    ↓
+Main Agent deletes marker
 ```
+
+### How Enforcement Works
+
+**PreToolUse Hook:** `.claude/hooks/enforce-orchestrator-restrictions.py`
+
+When `.claude/orchestrator-mode` marker file exists:
+- Edit, Write, Bash tools are **blocked** with error message
+- Orchestrator is forced to delegate via Task tool
 
 ### Agent Definitions
 
 Located in `.claude/agents/`:
 
-| Agent | Tools | Responsibility |
-|-------|-------|----------------|
+| Agent | Intended Tools | Responsibility |
+|-------|----------------|----------------|
 | `orchestrator` | Read, Glob, Grep, Task | Coordinate phases, delegate work |
-| `dev-agent` | Read, Write, Edit, Bash, Glob, Grep | Implement code changes |
-| `testing-agent` | Read, Bash, Glob, Grep | Code review, syntax checks, verification |
-| `deploy-agent` | Read, Bash, Glob, Grep | Git commits, rsync, SSH |
+| `dev-agent` | Read, Write, Edit, Bash | Implement code changes |
+| `testing-agent` | Read, Bash | Code review, syntax checks |
+| `deploy-agent` | Read, Bash | Git commits, rsync, SSH |
 
-### Why Tool Restrictions?
+### How Main Agent Invokes Orchestrator
 
-The `tools` field in agent YAML frontmatter is **enforced by Claude Code** - agents literally cannot access unlisted tools. This prevents the orchestrator from "taking shortcuts" by editing files directly.
+```bash
+# 1. Create marker to activate restrictions
+touch .claude/orchestrator-mode
 
-### Spawning Agents
+# 2. Spawn orchestrator (uses general-purpose but hook blocks tools)
+Task(general-purpose) with:
+  "Execute Phase X from docs/phase-X-implementation-plan.md
+   Follow the orchestrator workflow in .claude/agents/orchestrator.md"
 
+# 3. Wait for completion
+
+# 4. Delete marker
+rm .claude/orchestrator-mode
 ```
-# From main agent (spawn orchestrator):
-Task(orchestrator) with phase details
 
-# From orchestrator (spawn dev-agent):
-Task(dev-agent) with implementation steps
+### Why Separation Matters
 
-# From orchestrator (spawn deploy-agent):
-Task(deploy-agent) with git/deploy instructions
-```
+**The same agent should NOT write and test code.**
 
-### Legacy Instructions
+- dev-agent: Implements features (may have blind spots)
+- testing-agent: Reviews objectively (fresh perspective)
+- deploy-agent: Commits only after approval
 
-`docs/subagents/orchestrator-agent.md` contains the original instruction-based approach. It is **deprecated** - use `.claude/agents/orchestrator.md` for enforced restrictions.
+This prevents bias and ensures quality.

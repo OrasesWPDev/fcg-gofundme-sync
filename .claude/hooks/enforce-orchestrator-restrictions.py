@@ -8,6 +8,10 @@ When .claude/orchestrator-mode marker file exists, this hook blocks:
 - Bash tool
 
 This forces the orchestrator to delegate work to specialized agents.
+
+Exit codes:
+- 0: Allow the tool call
+- 2: Deny the tool call (error message on stderr)
 """
 
 import json
@@ -17,8 +21,15 @@ import os
 # Tools that orchestrator is NOT allowed to use
 BLOCKED_TOOLS = {"Edit", "Write", "Bash"}
 
-# Marker file that indicates orchestrator mode is active
-MARKER_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "orchestrator-mode")
+
+def get_marker_path():
+    """Get the path to the orchestrator-mode marker file."""
+    # Use CLAUDE_PROJECT_DIR if available, otherwise use cwd from input
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir:
+        return os.path.join(project_dir, ".claude", "orchestrator-mode")
+    # Fallback: get from hook input cwd
+    return None
 
 
 def main():
@@ -27,28 +38,37 @@ def main():
         hook_input = json.load(sys.stdin)
     except json.JSONDecodeError:
         # If we can't parse input, allow the tool call
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     tool_name = hook_input.get("tool_name", "")
+    cwd = hook_input.get("cwd", "")
+
+    # Determine marker file path
+    marker_path = get_marker_path()
+    if not marker_path and cwd:
+        marker_path = os.path.join(cwd, ".claude", "orchestrator-mode")
+
+    if not marker_path:
+        # Can't determine marker path, allow the call
+        sys.exit(0)
 
     # Check if orchestrator mode is active
-    if os.path.exists(MARKER_FILE):
+    if os.path.exists(marker_path):
         if tool_name in BLOCKED_TOOLS:
-            # Block the tool and provide helpful message
-            print(json.dumps({
-                "decision": "block",
-                "message": f"ORCHESTRATOR RESTRICTION: {tool_name} tool is blocked in orchestrator mode. "
-                          f"You must delegate this work:\n"
-                          f"  - Code changes → Use the dev-agent\n"
-                          f"  - Code review → Use the testing-agent\n"
-                          f"  - Git/deployment → Use the deploy-agent\n\n"
-                          f"Use the Task tool to spawn the appropriate agent."
-            }))
-            return
+            # Block the tool - write message to stderr and exit with code 2
+            error_msg = (
+                f"ORCHESTRATOR RESTRICTION: {tool_name} tool is blocked.\n"
+                f"You must delegate this work:\n"
+                f"  - Code changes → Use the dev-agent\n"
+                f"  - Code review → Use the testing-agent\n"
+                f"  - Git/deployment → Use the deploy-agent\n\n"
+                f"Use the Task tool to spawn the appropriate agent."
+            )
+            print(error_msg, file=sys.stderr)
+            sys.exit(2)  # Exit code 2 = deny
 
     # Allow the tool call
-    print(json.dumps({"decision": "allow"}))
+    sys.exit(0)
 
 
 if __name__ == "__main__":

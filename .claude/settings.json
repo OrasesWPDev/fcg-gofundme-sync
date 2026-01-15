@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/enforce-orchestrator-restrictions.py"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-orchestrator-restrictions.py\""
           }
         ]
       }

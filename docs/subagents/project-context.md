@@ -42,7 +42,7 @@ docs/
 ### `FCG_GFM_Sync_Poller`
 - WP-Cron job every 15 minutes
 - Inbound sync: GFM API → WP posts
-- WP-CLI commands: `wp fcg-sync pull`, `wp fcg-sync status`
+- WP-CLI commands: `wp fcg-sync pull`, `wp fcg-sync push`, `wp fcg-sync status`, `wp fcg-sync conflicts`, `wp fcg-sync retry`
 
 ---
 
@@ -99,7 +99,8 @@ docs/
 | 3 | Incoming Sync Logic | ✅ Complete (`a4e5183`) |
 | 4 | Conflict Detection | ✅ Complete (`3fcf0de`) |
 | 5 | Admin UI | ✅ Complete (`b020027`) |
-| 6 | Error Handling | Planned |
+| 6 | Error Handling | ✅ Complete (`5b293ca`) |
+| C0 | Fix Designations | ✅ Complete (`341dc63`) - Added push command, synced 855 funds |
 
 ---
 

@@ -1,5 +1,13 @@
 # Orchestrator Agent Instructions
 
+> **DEPRECATED:** This file contains instructions only (not enforced).
+> The actual agent configuration with **enforced tool restrictions** is at:
+> `.claude/agents/orchestrator.md`
+>
+> Use `Task(orchestrator)` to spawn the properly restricted agent.
+
+---
+
 **For Orchestrator Agents:** You manage the entire phase execution lifecycle.
 
 **Your job:** Coordinate implementation by spawning dev agents, then report results to the main agent.

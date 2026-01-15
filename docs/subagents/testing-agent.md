@@ -1,5 +1,8 @@
 # Testing Agent Instructions
 
+> **NOTE:** The agent configuration is at `.claude/agents/testing-agent.md`
+> This file contains the **review checklist** that testing agents should follow.
+
 **For Testing Agents:** Read this file before reviewing code changes.
 
 ---

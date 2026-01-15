@@ -115,3 +115,53 @@ docs/
 - SSH: `frederickcount@frederickcount.ssh.wpengine.net`
 - Path: `~/sites/frederickcount`
 - API: Production Classy credentials
+
+---
+
+## Agent Architecture
+
+Phase execution uses a hierarchical agent pattern with **enforced tool restrictions**.
+
+### Agent Hierarchy
+
+```
+Main Agent
+    ↓
+Task(orchestrator)  →  Read, Glob, Grep, Task only
+    ↓
+    ├── Task(dev-agent)      →  Read, Write, Edit, Bash, Glob, Grep
+    ├── Task(testing-agent)  →  Read, Bash, Glob, Grep
+    └── Task(deploy-agent)   →  Read, Bash, Glob, Grep
+```
+
+### Agent Definitions
+
+Located in `.claude/agents/`:
+
+| Agent | Tools | Responsibility |
+|-------|-------|----------------|
+| `orchestrator` | Read, Glob, Grep, Task | Coordinate phases, delegate work |
+| `dev-agent` | Read, Write, Edit, Bash, Glob, Grep | Implement code changes |
+| `testing-agent` | Read, Bash, Glob, Grep | Code review, syntax checks, verification |
+| `deploy-agent` | Read, Bash, Glob, Grep | Git commits, rsync, SSH |
+
+### Why Tool Restrictions?
+
+The `tools` field in agent YAML frontmatter is **enforced by Claude Code** - agents literally cannot access unlisted tools. This prevents the orchestrator from "taking shortcuts" by editing files directly.
+
+### Spawning Agents
+
+```
+# From main agent (spawn orchestrator):
+Task(orchestrator) with phase details
+
+# From orchestrator (spawn dev-agent):
+Task(dev-agent) with implementation steps
+
+# From orchestrator (spawn deploy-agent):
+Task(deploy-agent) with git/deploy instructions
+```
+
+### Legacy Instructions
+
+`docs/subagents/orchestrator-agent.md` contains the original instruction-based approach. It is **deprecated** - use `.claude/agents/orchestrator.md` for enforced restrictions.

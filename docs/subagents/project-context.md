@@ -101,6 +101,7 @@ docs/
 | 5 | Admin UI | ✅ Complete (`b020027`) |
 | 6 | Error Handling | ✅ Complete (`5b293ca`) |
 | C0 | Fix Designations | ✅ Complete (`341dc63`) - Added push command, synced 855 funds |
+| C1 | Campaign API Methods | ✅ Complete (`7337ce2`) - 5 CRUD methods, meta constants, v2.0.0 |
 
 ---
 

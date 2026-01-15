@@ -27,7 +27,17 @@ class FCG_GFM_Sync_Handler {
      * Post meta key for last sync timestamp
      */
     private const META_KEY_LAST_SYNC = '_gofundme_last_sync';
-    
+
+    /**
+     * Meta key for GoFundMe Pro Campaign ID
+     */
+    private const META_CAMPAIGN_ID = '_gofundme_campaign_id';
+
+    /**
+     * Meta key for GoFundMe Pro Campaign URL
+     */
+    private const META_CAMPAIGN_URL = '_gofundme_campaign_url';
+
     /**
      * ACF field group key
      */

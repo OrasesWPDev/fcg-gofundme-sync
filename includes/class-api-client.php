@@ -290,6 +290,80 @@ class FCG_GFM_API_Client {
     }
 
     /**
+     * Create a campaign
+     *
+     * @param array $data Campaign data (name, goal, type, etc.)
+     * @return array Response
+     */
+    public function create_campaign(array $data): array {
+        return $this->request('POST', "/organizations/{$this->org_id}/campaigns", $data);
+    }
+
+    /**
+     * Update a campaign
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @param array $data Updated data
+     * @return array Response
+     */
+    public function update_campaign($campaign_id, array $data): array {
+        return $this->request('PUT', "/campaigns/{$campaign_id}", $data);
+    }
+
+    /**
+     * Get a campaign
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @return array Response
+     */
+    public function get_campaign($campaign_id): array {
+        return $this->request('GET', "/campaigns/{$campaign_id}");
+    }
+
+    /**
+     * Get all campaigns for the organization with pagination.
+     *
+     * @param int $per_page Results per page (default 100, max 100)
+     * @return array {success: bool, data: array|null, error: string|null, total: int}
+     */
+    public function get_all_campaigns(int $per_page = 100): array {
+        $all_campaigns = [];
+        $page = 1;
+
+        do {
+            $endpoint = "/organizations/{$this->org_id}/campaigns?page={$page}&per_page={$per_page}";
+            $result = $this->request('GET', $endpoint);
+
+            if (!$result['success']) {
+                return $result;
+            }
+
+            $data = $result['data'];
+            $all_campaigns = array_merge($all_campaigns, $data['data'] ?? []);
+
+            $has_more = $page < ($data['last_page'] ?? 1);
+            $page++;
+
+        } while ($has_more);
+
+        return [
+            'success' => true,
+            'data' => $all_campaigns,
+            'total' => count($all_campaigns),
+        ];
+    }
+
+    /**
+     * Deactivate a campaign
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @return array Response
+     */
+    public function deactivate_campaign($campaign_id): array {
+        return $this->request('POST', "/campaigns/{$campaign_id}/deactivate", []);
+    }
+
+    /**
      * Log error message
      * 
      * @param string $message Error message

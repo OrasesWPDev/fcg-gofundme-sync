@@ -129,6 +129,9 @@ class FCG_GFM_Sync_Handler {
                 $this->create_designation($post_id, $designation_data);
             }
         }
+
+        // Sync campaign (parallel to designation)
+        $this->sync_campaign_to_gofundme($post_id, $post);
     }
     
     /**
@@ -153,9 +156,18 @@ class FCG_GFM_Sync_Handler {
         $result = $this->api->update_designation($designation_id, [
             'is_active' => false,
         ]);
-        
+
         if ($result['success']) {
             $this->log_info("Deactivated designation {$designation_id} for trashed post {$post_id}");
+        }
+
+        // Deactivate campaign
+        $campaign_id = $this->get_campaign_id($post_id);
+        if ($campaign_id) {
+            $result = $this->api->deactivate_campaign($campaign_id);
+            if ($result['success']) {
+                $this->log_info("Deactivated campaign {$campaign_id} for trashed post {$post_id}");
+            }
         }
     }
     
@@ -181,9 +193,19 @@ class FCG_GFM_Sync_Handler {
         $result = $this->api->update_designation($designation_id, [
             'is_active' => true,
         ]);
-        
+
         if ($result['success']) {
             $this->log_info("Reactivated designation {$designation_id} for restored post {$post_id}");
+        }
+
+        // Update campaign (attempt reactivation via update)
+        $campaign_id = $this->get_campaign_id($post_id);
+        if ($campaign_id) {
+            $campaign_data = $this->build_campaign_data($post);
+            $result = $this->api->update_campaign($campaign_id, $campaign_data);
+            if ($result['success']) {
+                $this->log_info("Updated campaign {$campaign_id} for restored post {$post_id}");
+            }
         }
     }
     
@@ -207,9 +229,18 @@ class FCG_GFM_Sync_Handler {
         
         // Permanently delete designation
         $result = $this->api->delete_designation($designation_id);
-        
+
         if ($result['success']) {
             $this->log_info("Deleted designation {$designation_id} for deleted post {$post_id}");
+        }
+
+        // Deactivate campaign (preserve donation history - do NOT delete)
+        $campaign_id = $this->get_campaign_id($post_id);
+        if ($campaign_id) {
+            $result = $this->api->deactivate_campaign($campaign_id);
+            if ($result['success']) {
+                $this->log_info("Deactivated campaign {$campaign_id} for deleted post {$post_id}");
+            }
         }
     }
     
@@ -239,14 +270,30 @@ class FCG_GFM_Sync_Handler {
         
         // Update is_active based on publish status
         $is_active = ($new_status === 'publish');
-        
+
         $result = $this->api->update_designation($designation_id, [
             'is_active' => $is_active,
         ]);
-        
+
         if ($result['success']) {
             $status_text = $is_active ? 'activated' : 'deactivated';
             $this->log_info("Status change: {$status_text} designation {$designation_id} for post {$post->ID} ({$old_status} → {$new_status})");
+        }
+
+        // Update campaign based on publish status
+        $campaign_id = $this->get_campaign_id($post->ID);
+        if ($campaign_id) {
+            if ($is_active) {
+                $campaign_data = $this->build_campaign_data($post);
+                $campaign_result = $this->api->update_campaign($campaign_id, $campaign_data);
+            } else {
+                $campaign_result = $this->api->deactivate_campaign($campaign_id);
+            }
+
+            if ($campaign_result['success']) {
+                $status_text = $is_active ? 'activated' : 'deactivated';
+                $this->log_info("Status change: {$status_text} campaign {$campaign_id} for post {$post->ID}");
+            }
         }
     }
     
@@ -285,10 +332,144 @@ class FCG_GFM_Sync_Handler {
         
         return $data;
     }
-    
+
+    /**
+     * Build campaign data from WordPress post
+     *
+     * @param WP_Post $post Post object
+     * @return array Campaign data for API
+     */
+    private function build_campaign_data(WP_Post $post): array {
+        $data = [
+            'name'                  => $this->truncate_string($post->post_title, 127),
+            'type'                  => 'crowdfunding',
+            'goal'                  => $this->get_fund_goal($post->ID),
+            'started_at'            => $post->post_date,
+            'timezone_identifier'   => 'America/New_York',
+            'external_reference_id' => (string) $post->ID,
+        ];
+
+        if (!empty($post->post_content)) {
+            $data['overview'] = $this->truncate_string(
+                wp_strip_all_tags($post->post_content),
+                2000
+            );
+        } elseif (!empty($post->post_excerpt)) {
+            $data['overview'] = $post->post_excerpt;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get fundraising goal for a fund
+     *
+     * @param int $post_id Post ID
+     * @return float Goal amount (default 1000)
+     */
+    private function get_fund_goal(int $post_id): float {
+        if (function_exists('get_field')) {
+            $gfm_settings = get_field(self::ACF_GROUP_KEY, $post_id);
+            if (!empty($gfm_settings['fundraising_goal']) && is_numeric($gfm_settings['fundraising_goal'])) {
+                return (float) $gfm_settings['fundraising_goal'];
+            }
+        }
+
+        $goal = get_post_meta($post_id, '_fundraising_goal', true);
+        if (!empty($goal) && is_numeric($goal)) {
+            return (float) $goal;
+        }
+
+        return 1000.00;
+    }
+
+    /**
+     * Create a new campaign in GoFundMe Pro
+     *
+     * @param int $post_id WordPress post ID
+     * @param array $data Campaign data
+     */
+    private function create_campaign_in_gfm(int $post_id, array $data): void {
+        $result = $this->api->create_campaign($data);
+
+        if ($result['success'] && !empty($result['data']['id'])) {
+            $campaign_id = $result['data']['id'];
+            $campaign_url = $result['data']['canonical_url'] ?? '';
+
+            update_post_meta($post_id, self::META_CAMPAIGN_ID, $campaign_id);
+            update_post_meta($post_id, self::META_CAMPAIGN_URL, $campaign_url);
+            update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
+
+            $this->log_info("Created campaign {$campaign_id} for post {$post_id}");
+        } else {
+            $error = $result['error'] ?? 'Unknown error';
+            $this->log_error("Failed to create campaign for post {$post_id}: {$error}");
+        }
+    }
+
+    /**
+     * Update an existing campaign in GoFundMe Pro
+     *
+     * @param int $post_id WordPress post ID
+     * @param string|int $campaign_id GoFundMe Pro campaign ID
+     * @param array $data Campaign data
+     */
+    private function update_campaign_in_gfm(int $post_id, $campaign_id, array $data): void {
+        $result = $this->api->update_campaign($campaign_id, $data);
+
+        if ($result['success']) {
+            update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
+            $this->log_info("Updated campaign {$campaign_id} for post {$post_id}");
+        } else {
+            $error = $result['error'] ?? 'Unknown error';
+            $this->log_error("Failed to update campaign {$campaign_id} for post {$post_id}: {$error}");
+        }
+    }
+
+    /**
+     * Sync fund to GoFundMe Pro as a campaign
+     *
+     * @param int $post_id Post ID
+     * @param WP_Post $post Post object
+     */
+    private function sync_campaign_to_gofundme(int $post_id, WP_Post $post): void {
+        $campaign_data = $this->build_campaign_data($post);
+        $campaign_id = $this->get_campaign_id($post_id);
+
+        if ($campaign_id) {
+            $this->update_campaign_in_gfm($post_id, $campaign_id, $campaign_data);
+        } else {
+            if ($post->post_status === 'publish') {
+                $this->create_campaign_in_gfm($post_id, $campaign_data);
+            }
+        }
+    }
+
+    /**
+     * Get campaign ID from post meta
+     *
+     * @param int $post_id Post ID
+     * @return string|null Campaign ID or null
+     */
+    private function get_campaign_id(int $post_id): ?string {
+        $campaign_id = get_post_meta($post_id, self::META_CAMPAIGN_ID, true);
+        return !empty($campaign_id) ? (string) $campaign_id : null;
+    }
+
+    /**
+     * Get campaign URL from post meta
+     *
+     * @param int $post_id Post ID
+     * @return string|null Campaign URL or null
+     */
+    private function get_campaign_url(int $post_id): ?string {
+        $campaign_url = get_post_meta($post_id, self::META_CAMPAIGN_URL, true);
+        return !empty($campaign_url) ? $campaign_url : null;
+    }
+
     /**
      * Create a new designation
-     * 
+     *
      * @param int $post_id WordPress post ID
      * @param array $data Designation data
      */

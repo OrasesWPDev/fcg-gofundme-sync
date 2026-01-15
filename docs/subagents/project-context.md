@@ -129,8 +129,9 @@ Main Agent
     ↓
 Task(orchestrator)  →  Read, Glob, Grep, Task only
     ↓
-    ├── Task(dev-agent)     →  Read, Write, Edit, Bash, Glob, Grep
-    └── Task(deploy-agent)  →  Read, Bash, Glob, Grep
+    ├── Task(dev-agent)      →  Read, Write, Edit, Bash, Glob, Grep
+    ├── Task(testing-agent)  →  Read, Bash, Glob, Grep
+    └── Task(deploy-agent)   →  Read, Bash, Glob, Grep
 ```
 
 ### Agent Definitions
@@ -141,7 +142,8 @@ Located in `.claude/agents/`:
 |-------|-------|----------------|
 | `orchestrator` | Read, Glob, Grep, Task | Coordinate phases, delegate work |
 | `dev-agent` | Read, Write, Edit, Bash, Glob, Grep | Implement code changes |
-| `deploy-agent` | Read, Bash, Glob, Grep | Git commits, rsync, SSH, tests |
+| `testing-agent` | Read, Bash, Glob, Grep | Code review, syntax checks, verification |
+| `deploy-agent` | Read, Bash, Glob, Grep | Git commits, rsync, SSH |
 
 ### Why Tool Restrictions?
 

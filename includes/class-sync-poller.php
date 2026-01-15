@@ -71,6 +71,7 @@ class FCG_GFM_Sync_Poller {
         // Register WP-CLI commands
         if (defined('WP_CLI') && WP_CLI) {
             \WP_CLI::add_command('fcg-sync pull', [$this, 'cli_pull']);
+            \WP_CLI::add_command('fcg-sync push', [$this, 'cli_push']);
             \WP_CLI::add_command('fcg-sync status', [$this, 'cli_status']);
             \WP_CLI::add_command('fcg-sync conflicts', [$this, 'cli_conflicts']);
             \WP_CLI::add_command('fcg-sync retry', [$this, 'cli_retry']);
@@ -271,6 +272,197 @@ class FCG_GFM_Sync_Poller {
             $this->set_last_poll_time();
             \WP_CLI::success('Poll timestamp updated');
         }
+    }
+
+    /**
+     * Push WordPress funds to GoFundMe Pro.
+     *
+     * Creates designations in GoFundMe Pro for funds that don't have one yet.
+     * Also updates existing designations if --update is passed.
+     *
+     * ## OPTIONS
+     *
+     * [--dry-run]
+     * : Show what would be synced without making changes.
+     *
+     * [--update]
+     * : Also update existing designations (not just create new ones).
+     *
+     * [--limit=<number>]
+     * : Maximum number of funds to process. Default: all.
+     *
+     * [--post-id=<id>]
+     * : Sync only a specific post ID.
+     *
+     * ## EXAMPLES
+     *
+     *     wp fcg-sync push
+     *     wp fcg-sync push --dry-run
+     *     wp fcg-sync push --update
+     *     wp fcg-sync push --limit=100
+     *     wp fcg-sync push --post-id=13707
+     *
+     * @param array $args       Positional arguments.
+     * @param array $assoc_args Associative arguments.
+     */
+    public function cli_push(array $args, array $assoc_args): void {
+        $dry_run = isset($assoc_args['dry-run']);
+        $update = isset($assoc_args['update']);
+        $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : -1;
+        $post_id = isset($assoc_args['post-id']) ? (int) $assoc_args['post-id'] : 0;
+
+        if ($dry_run) {
+            \WP_CLI::log('Dry run mode - no changes will be made');
+        }
+
+        // Build query
+        $query_args = [
+            'post_type' => 'funds',
+            'post_status' => 'publish',
+            'posts_per_page' => $limit,
+        ];
+
+        if ($post_id) {
+            $query_args['p'] = $post_id;
+            $query_args['post_status'] = 'any'; // Allow any status for specific post
+        }
+
+        $posts = get_posts($query_args);
+
+        if (empty($posts)) {
+            \WP_CLI::warning('No funds found matching criteria');
+            return;
+        }
+
+        \WP_CLI::log(sprintf('Found %d fund(s) to process', count($posts)));
+
+        $stats = [
+            'processed' => 0,
+            'created' => 0,
+            'updated' => 0,
+            'skipped' => 0,
+            'errors' => 0,
+        ];
+
+        $progress = \WP_CLI\Utils\make_progress_bar('Processing funds', count($posts));
+
+        foreach ($posts as $post) {
+            $stats['processed']++;
+            $designation_id = get_post_meta($post->ID, '_gofundme_designation_id', true);
+
+            // Build designation data from WP post
+            $data = $this->build_designation_data_from_post($post);
+
+            if ($designation_id) {
+                // Already has a designation
+                if (!$update) {
+                    $stats['skipped']++;
+                    $progress->tick();
+                    continue;
+                }
+
+                // Update existing
+                if ($dry_run) {
+                    \WP_CLI::log(sprintf(
+                        "  [WOULD UPDATE] Post %d: %s (Designation %s)",
+                        $post->ID,
+                        mb_substr($post->post_title, 0, 40),
+                        $designation_id
+                    ));
+                    $stats['updated']++;
+                } else {
+                    $result = $this->api->update_designation($designation_id, $data);
+                    if ($result['success']) {
+                        update_post_meta($post->ID, '_gofundme_last_sync', current_time('mysql'));
+                        update_post_meta($post->ID, '_gofundme_sync_source', 'wordpress');
+                        $stats['updated']++;
+                    } else {
+                        \WP_CLI::warning(sprintf(
+                            "  [ERROR] Post %d: %s - %s",
+                            $post->ID,
+                            $post->post_title,
+                            $result['error'] ?? 'Unknown error'
+                        ));
+                        $stats['errors']++;
+                    }
+                }
+            } else {
+                // No designation - create new
+                if ($dry_run) {
+                    \WP_CLI::log(sprintf(
+                        "  [WOULD CREATE] Post %d: %s",
+                        $post->ID,
+                        mb_substr($post->post_title, 0, 40)
+                    ));
+                    $stats['created']++;
+                } else {
+                    $result = $this->api->create_designation($data);
+                    if ($result['success'] && !empty($result['data']['id'])) {
+                        $new_id = $result['data']['id'];
+                        update_post_meta($post->ID, '_gofundme_designation_id', $new_id);
+                        update_post_meta($post->ID, '_gofundme_last_sync', current_time('mysql'));
+                        update_post_meta($post->ID, '_gofundme_sync_source', 'wordpress');
+                        $stats['created']++;
+                    } else {
+                        \WP_CLI::warning(sprintf(
+                            "  [ERROR] Post %d: %s - %s",
+                            $post->ID,
+                            $post->post_title,
+                            $result['error'] ?? 'Unknown error'
+                        ));
+                        $stats['errors']++;
+                    }
+                }
+            }
+
+            $progress->tick();
+        }
+
+        $progress->finish();
+
+        \WP_CLI::log('');
+        \WP_CLI::log(sprintf(
+            "Results: %d processed, %d created, %d updated, %d skipped, %d errors",
+            $stats['processed'],
+            $stats['created'],
+            $stats['updated'],
+            $stats['skipped'],
+            $stats['errors']
+        ));
+
+        if ($stats['errors'] === 0) {
+            \WP_CLI::success('Push complete!');
+        } elseif ($stats['created'] > 0 || $stats['updated'] > 0) {
+            \WP_CLI::warning('Push complete with some errors');
+        } else {
+            \WP_CLI::error('Push failed - all operations had errors');
+        }
+    }
+
+    /**
+     * Build designation data from a WordPress post.
+     *
+     * @param WP_Post $post The post object.
+     * @return array Designation data for API.
+     */
+    private function build_designation_data_from_post(\WP_Post $post): array {
+        $data = [
+            'name' => $this->truncate_string($post->post_title, 127),
+            'is_active' => ($post->post_status === 'publish'),
+            'external_reference_id' => (string) $post->ID,
+        ];
+
+        // Add description from excerpt or content
+        if (!empty($post->post_excerpt)) {
+            $data['description'] = $post->post_excerpt;
+        } elseif (!empty($post->post_content)) {
+            $data['description'] = $this->truncate_string(
+                wp_strip_all_tags($post->post_content),
+                500
+            );
+        }
+
+        return $data;
     }
 
     /**

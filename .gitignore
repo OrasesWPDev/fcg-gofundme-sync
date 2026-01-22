@@ -2,6 +2,9 @@
 *.log
 .idea/
 
+# GSD codebase intelligence (regenerated automatically)
+.planning/intel/
+
 # Claude Code local settings and hookify rules (may contain sensitive patterns)
 .claude/*.local.md
 .claude/settings.local.json

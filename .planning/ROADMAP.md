@@ -8,10 +8,10 @@ This roadmap extends the existing designation sync plugin to support bi-directio
 
 Some phases require manual work that cannot be automated via API:
 
-| Phase | Manual Task | Assistance Options |
-|-------|-------------|-------------------|
-| 1 | Create template campaign in Classy sandbox | Screenshots for guidance, or `/chrome` browser automation |
-| 4 | Configure server cron on WP Engine | Step-by-step instructions in plan |
+| Phase | Manual Task | Assistance Options | Status |
+|-------|-------------|-------------------|--------|
+| 1 | Create template campaign in Classy sandbox | Screenshots for guidance, or `/chrome` browser automation | Pending |
+| 4 | Enable Alternate Cron on WP Engine | WP Engine dashboard toggle | ✅ Staging done |
 
 Plans for these phases will include explicit user steps. For Classy UI tasks, the user can:
 - Share screenshots and receive guidance on next steps
@@ -97,10 +97,9 @@ Plans:
   5. Sync runs via server cron (not WP-Cron)
 
 **Manual Work Required:**
-- Disable WP-Cron in wp-config.php
-- Configure server cron via WP Engine dashboard (staging and production)
-
-*Plan must include step-by-step instructions for cron setup.*
+- Enable "Alternate Cron" in WP Engine dashboard (replaces wp-cron with reliable server cron)
+- ✅ **Staging:** Already configured (Alternate Cron enabled)
+- ⏳ **Production:** Will need same toggle enabled before go-live
 
 **Plans**: TBD
 

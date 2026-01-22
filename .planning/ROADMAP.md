@@ -1,0 +1,123 @@
+# Roadmap: FCG GoFundMe Pro Sync
+
+## Overview
+
+This roadmap extends the existing designation sync plugin to support bi-directional campaign synchronization with Classy. Phase 1 establishes configuration infrastructure, Phases 2-3 implement outbound push sync with status management, Phase 4 adds inbound donation polling, Phase 5 provides bulk migration for 758 existing funds, and Phase 6 enhances admin visibility. The journey uses campaign duplication (the only public creation method) and extends proven sync patterns from the existing designation implementation.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Configuration** - Add template campaign setting and fundraising goal field
+- [ ] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
+- [ ] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
+- [ ] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
+- [ ] **Phase 5: Bulk Migration** - WP-CLI tool to create campaigns for existing funds
+- [ ] **Phase 6: Admin UI** - Display campaign data and sync controls in WordPress admin
+
+## Phase Details
+
+### Phase 1: Configuration
+**Goal**: Admin can configure campaign template and fundraising goals for fund creation
+**Depends on**: Nothing (first phase)
+**Requirements**: CONF-01, CONF-02
+**Success Criteria** (what must be TRUE):
+  1. Admin can set template campaign ID in plugin settings
+  2. Template campaign ID is validated against Classy API on save
+  3. Fundraising goal field exists on fund edit screen
+  4. Goal value is saved with fund post meta
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
+### Phase 2: Campaign Push Sync
+**Goal**: Published WordPress funds automatically create and update campaigns in Classy
+**Depends on**: Phase 1 (requires template campaign ID)
+**Requirements**: CAMP-01, CAMP-02, CAMP-03, CAMP-04, CAMP-05, CAMP-06
+**Success Criteria** (what must be TRUE):
+  1. When fund is published, campaign is created in Classy via template duplication
+  2. When fund title or goal is updated, campaign name and goal update in Classy
+  3. When fund is trashed, campaign is deactivated in Classy
+  4. When fund is restored from trash, campaign is reactivated and published in Classy
+  5. Campaign ID and URL are stored in fund post meta after sync
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
+### Phase 3: Campaign Status Management
+**Goal**: Campaign publish/unpublish status stays synchronized with WordPress post status
+**Depends on**: Phase 2 (requires campaign creation working)
+**Requirements**: STAT-01, STAT-02, STAT-03
+**Success Criteria** (what must be TRUE):
+  1. When fund is set to draft, campaign is unpublished (not deactivated)
+  2. When fund is republished from draft, campaign returns to active status
+  3. Campaign status correctly maps: publish→active, draft→unpublished, trash→deactivated
+  4. Two-step restore works: reactivate then publish
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
+### Phase 4: Inbound Sync
+**Goal**: Donation totals and campaign status automatically sync from Classy to WordPress
+**Depends on**: Phase 2 (requires campaigns to exist)
+**Requirements**: SYNC-01, SYNC-02, SYNC-03, SYNC-04
+**Success Criteria** (what must be TRUE):
+  1. Donation totals are fetched from Classy every 15 minutes
+  2. Campaign status (active/unpublished/deactivated) is fetched and reflected in post meta
+  3. Goal progress percentage is calculated and stored
+  4. Inbound sync updates post meta without triggering outbound sync
+  5. Sync runs via server cron (not WP-Cron)
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
+### Phase 5: Bulk Migration
+**Goal**: All 758 existing funds without campaigns get campaigns created via WP-CLI
+**Depends on**: Phases 2-3 (requires sync operations validated)
+**Requirements**: MIGR-01, MIGR-02, MIGR-03, MIGR-04, MIGR-05
+**Success Criteria** (what must be TRUE):
+  1. WP-CLI command creates campaigns for funds lacking campaign IDs
+  2. Migration runs in 50-fund batches to avoid timeouts
+  3. Migration can be resumed if interrupted (idempotent)
+  4. Dry-run mode shows what would happen without making changes
+  5. Migration logs success/failure for each fund
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
+### Phase 6: Admin UI
+**Goal**: Campaign data and sync status are visible in WordPress admin interface
+**Depends on**: Phases 2-4 (requires sync operations working)
+**Requirements**: ADMN-01, ADMN-02, ADMN-03, ADMN-04
+**Success Criteria** (what must be TRUE):
+  1. Campaign URL displays as clickable link in fund edit meta box
+  2. Current donation total displays in fund edit meta box
+  3. Last sync timestamp displays in fund edit meta box
+  4. Manual "Sync Now" button triggers immediate sync for individual fund
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Configuration | 0/0 | Not started | - |
+| 2. Campaign Push Sync | 0/0 | Not started | - |
+| 3. Campaign Status Management | 0/0 | Not started | - |
+| 4. Inbound Sync | 0/0 | Not started | - |
+| 5. Bulk Migration | 0/0 | Not started | - |
+| 6. Admin UI | 0/0 | Not started | - |

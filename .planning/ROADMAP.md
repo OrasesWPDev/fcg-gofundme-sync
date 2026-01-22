@@ -4,6 +4,19 @@
 
 This roadmap extends the existing designation sync plugin to support bi-directional campaign synchronization with Classy. Phase 1 establishes configuration infrastructure, Phases 2-3 implement outbound push sync with status management, Phase 4 adds inbound donation polling, Phase 5 provides bulk migration for 758 existing funds, and Phase 6 enhances admin visibility. The journey uses campaign duplication (the only public creation method) and extends proven sync patterns from the existing designation implementation.
 
+## Manual Work
+
+Some phases require manual work that cannot be automated via API:
+
+| Phase | Manual Task | Assistance Options |
+|-------|-------------|-------------------|
+| 1 | Create template campaign in Classy sandbox | Screenshots for guidance, or `/chrome` browser automation |
+| 4 | Configure server cron on WP Engine | Step-by-step instructions in plan |
+
+Plans for these phases will include explicit user steps. For Classy UI tasks, the user can:
+- Share screenshots and receive guidance on next steps
+- Allow agent to assist via browser automation (`/chrome`)
+
 ## Phases
 
 **Phase Numbering:**
@@ -30,6 +43,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Template campaign ID is validated against Classy API on save
   3. Fundraising goal field exists on fund edit screen
   4. Goal value is saved with fund post meta
+
+**Manual Work Required:**
+This phase includes manual Classy sandbox work that cannot be done via API:
+- Create template campaign in Classy with desired defaults (branding, description, settings)
+- Note the campaign ID for plugin configuration
+
+*Plan must include step-by-step instructions for manual tasks. User can share screenshots for guidance, or agent can assist via browser automation (`/chrome`).*
+
 **Plans**: TBD
 
 Plans:
@@ -74,6 +95,13 @@ Plans:
   3. Goal progress percentage is calculated and stored
   4. Inbound sync updates post meta without triggering outbound sync
   5. Sync runs via server cron (not WP-Cron)
+
+**Manual Work Required:**
+- Disable WP-Cron in wp-config.php
+- Configure server cron via WP Engine dashboard (staging and production)
+
+*Plan must include step-by-step instructions for cron setup.*
+
 **Plans**: TBD
 
 Plans:

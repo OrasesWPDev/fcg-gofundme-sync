@@ -37,6 +37,9 @@ require_once FCG_GFM_SYNC_PATH . 'includes/class-sync-poller.php';
 // Load the admin UI
 require_once FCG_GFM_SYNC_PATH . 'includes/class-admin-ui.php';
 
+// Background template validation cron hook
+add_action('fcg_gfm_revalidate_template', ['FCG_GFM_Admin_UI', 'revalidate_template_campaign']);
+
 /**
  * Check if a credential is available via env var or constant
  *

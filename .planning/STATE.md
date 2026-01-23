@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 2 of 6 (Campaign Push Sync)
-Plan: 2 of 4 complete in current phase
+Plan: 3 of 4 complete in current phase
 Status: Executing phase 02
-Last activity: 2026-01-23 — Plan 02-02 complete (campaign creation duplication workflow)
+Last activity: 2026-01-23 — Plan 02-03 complete (restore workflow & sync opt-out)
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: ~4 min (02-02)
+- Total plans completed: 3
+- Average duration: N/A
 - Total execution time: N/A
 
 **By Phase:**
@@ -28,10 +28,11 @@ Progress: [███░░░░░░░] 30%
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 01 - Configuration | 2 | Complete |
-| 02 - Campaign Push Sync | 2/4 | In Progress |
+| 02 - Campaign Push Sync | 3/4 | In Progress |
 
 **Recent Completions:**
-- 02-02: Campaign creation duplication workflow (b099b71)
+- 02-03: Restore workflow & sync opt-out (b099b71, 41a4669)
+- 02-02: Campaign creation duplication workflow (b18c9ad)
 - 02-01: Campaign lifecycle API methods (e38e439)
 
 *Updated after each plan completion*
@@ -49,10 +50,14 @@ Recent decisions affecting current work:
 - Use raw_goal (string) for duplication overrides, not goal (number)
 - Update overview in separate API call (not available in duplication overrides)
 - 60-second transient lock for race condition prevention
+- Reactivate returns campaign to unpublished status, publish required afterward
+- Campaign sync opt-out via ACF disable_campaign_sync field
 
 ### Pending Todos
 
 - Run staging test for 02-02 when SSH connectivity is restored
+- Run staging test for 02-03 (trash/restore cycle) when SSH connectivity is restored
+- Add ACF field `disable_campaign_sync` to gofundme_settings field group
 
 ### Blockers/Concerns
 
@@ -72,6 +77,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-01-23 (plan 02-02 execution)
-Stopped at: Plan 02-02 complete (local verification only, SSH timeout), ready for plan 02-03 execution
+Last session: 2026-01-23 (plan 02-03 documentation)
+Stopped at: Plan 02-03 already implemented, documentation added, ready for plan 02-04 execution
 Resume file: None

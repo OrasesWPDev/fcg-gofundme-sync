@@ -378,7 +378,7 @@ class FCG_GFM_API_Client {
             'overrides' => $overrides,
             'duplicates' => [], // Don't duplicate related objects (tickets, ecards)
         ];
-        return $this->request('POST', "/campaigns/{$source_campaign_id}/actions/duplicate", $data);
+        return $this->request('POST', "/campaigns/{$source_campaign_id}/duplicate", $data);
     }
 
     /**
@@ -391,7 +391,7 @@ class FCG_GFM_API_Client {
      * @return array Response
      */
     public function publish_campaign($campaign_id): array {
-        return $this->request('POST', "/campaigns/{$campaign_id}/actions/publish", []);
+        return $this->request('POST', "/campaigns/{$campaign_id}/publish", []);
     }
 
     /**
@@ -404,7 +404,7 @@ class FCG_GFM_API_Client {
      * @return array Response
      */
     public function unpublish_campaign($campaign_id): array {
-        return $this->request('POST', "/campaigns/{$campaign_id}/actions/unpublish", []);
+        return $this->request('POST', "/campaigns/{$campaign_id}/unpublish", []);
     }
 
     /**
@@ -417,7 +417,7 @@ class FCG_GFM_API_Client {
      * @return array Response
      */
     public function reactivate_campaign($campaign_id): array {
-        return $this->request('POST', "/campaigns/{$campaign_id}/actions/reactivate", []);
+        return $this->request('POST', "/campaigns/{$campaign_id}/reactivate", []);
     }
 
     /**

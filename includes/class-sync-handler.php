@@ -198,17 +198,36 @@ class FCG_GFM_Sync_Handler {
             $this->log_info("Reactivated designation {$designation_id} for restored post {$post_id}");
         }
 
-        // Update campaign (attempt reactivation via update)
+        // Reactivate and publish campaign
         $campaign_id = $this->get_campaign_id($post_id);
-        if ($campaign_id) {
+        if ($campaign_id && $this->should_sync_campaign($post_id)) {
+            // Step 1: Reactivate (returns campaign to unpublished status)
+            $reactivate_result = $this->api->reactivate_campaign($campaign_id);
+            if (!$reactivate_result['success']) {
+                $this->log_error("Failed to reactivate campaign {$campaign_id}: " . ($reactivate_result['error'] ?? 'Unknown error'));
+                return;
+            }
+            $this->log_info("Reactivated campaign {$campaign_id} for restored post {$post_id}");
+
+            // Step 2: Publish (makes campaign active again)
+            $publish_result = $this->api->publish_campaign($campaign_id);
+            if (!$publish_result['success']) {
+                $this->log_error("Failed to publish campaign {$campaign_id} after reactivation: " . ($publish_result['error'] ?? 'Unknown error'));
+                // Campaign is reactivated but unpublished - not ideal but recoverable
+            } else {
+                $this->log_info("Published campaign {$campaign_id} for restored post {$post_id}");
+            }
+
+            // Step 3: Update campaign data (name, goal, overview may have changed)
             $campaign_data = $this->build_campaign_data($post);
-            $result = $this->api->update_campaign($campaign_id, $campaign_data);
-            if ($result['success']) {
-                $this->log_info("Updated campaign {$campaign_id} for restored post {$post_id}");
+            $update_result = $this->api->update_campaign($campaign_id, $campaign_data);
+            if ($update_result['success']) {
+                update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
+                $this->log_info("Updated campaign {$campaign_id} data for restored post {$post_id}");
             }
         }
     }
-    
+
     /**
      * Handle fund permanent delete
      * 

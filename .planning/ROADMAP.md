@@ -11,7 +11,7 @@ Some phases require manual work that cannot be automated via API:
 | Phase | Manual Task | Assistance Options | Status |
 |-------|-------------|-------------------|--------|
 | 1 | Create template campaign in Classy sandbox | Screenshots for guidance, or `/chrome` browser automation | Pending |
-| 4 | Enable Alternate Cron on WP Engine | WP Engine dashboard toggle | ✅ Staging done |
+| 4 | Enable Alternate Cron on WP Engine | WP Engine dashboard toggle | Staging done |
 
 Plans for these phases will include explicit user steps. For Classy UI tasks, the user can:
 - Share screenshots and receive guidance on next steps
@@ -38,6 +38,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Goal**: Admin can configure campaign template and fundraising goals for fund creation
 **Depends on**: Nothing (first phase)
 **Requirements**: CONF-01, CONF-02
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md - Create template campaign in Classy sandbox (manual)
+- [ ] 01-02-PLAN.md - Add template campaign ID setting with API validation
+- [ ] 01-03-PLAN.md - Add fundraising goal field to fund meta box
+
 **Success Criteria** (what must be TRUE):
   1. Admin can set template campaign ID in plugin settings
   2. Template campaign ID is validated against Classy API on save
@@ -50,11 +57,6 @@ This phase includes manual Classy sandbox work that cannot be done via API:
 - Note the campaign ID for plugin configuration
 
 *Plan must include step-by-step instructions for manual tasks. User can share screenshots for guidance, or agent can assist via browser automation (`/chrome`).*
-
-**Plans**: TBD
-
-Plans:
-- [ ] TBD (will be created during plan-phase)
 
 ### Phase 2: Campaign Push Sync
 **Goal**: Published WordPress funds automatically create and update campaigns in Classy
@@ -78,7 +80,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. When fund is set to draft, campaign is unpublished (not deactivated)
   2. When fund is republished from draft, campaign returns to active status
-  3. Campaign status correctly maps: publish→active, draft→unpublished, trash→deactivated
+  3. Campaign status correctly maps: publish->active, draft->unpublished, trash->deactivated
   4. Two-step restore works: reactivate then publish
 **Plans**: TBD
 
@@ -98,8 +100,8 @@ Plans:
 
 **Manual Work Required:**
 - Enable "Alternate Cron" in WP Engine dashboard (replaces wp-cron with reliable server cron)
-- ✅ **Staging:** Already configured (Alternate Cron enabled)
-- ⏳ **Production:** Will need same toggle enabled before go-live
+- Staging: Already configured (Alternate Cron enabled)
+- Production: Will need same toggle enabled before go-live
 
 **Plans**: TBD
 
@@ -138,11 +140,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Configuration | 0/0 | Not started | - |
+| 1. Configuration | 0/3 | Planned | - |
 | 2. Campaign Push Sync | 0/0 | Not started | - |
 | 3. Campaign Status Management | 0/0 | Not started | - |
 | 4. Inbound Sync | 0/0 | Not started | - |

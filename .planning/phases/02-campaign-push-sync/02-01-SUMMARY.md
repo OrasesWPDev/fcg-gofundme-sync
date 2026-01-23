@@ -1,62 +1,49 @@
-# Plan 02-01 Summary: Add Campaign Lifecycle API Methods
+# Plan 02-01 Summary: Campaign Lifecycle API Methods
 
-**Status:** Complete (staging verification pending)
-**Completed:** 2026-01-23
-**Duration:** ~15 minutes
+**Phase:** 02-campaign-push-sync
+**Plan:** 01
+**Status:** Complete
+**Commit:** `e38e439`
 
 ## What Was Built
 
-Added four new public methods to `FCG_GFM_API_Client` class for campaign lifecycle operations:
-
-1. **`duplicate_campaign($source_campaign_id, array $overrides = [])`** - Duplicates a template campaign with field overrides
-2. **`publish_campaign($campaign_id)`** - Publishes a campaign to make it active
-3. **`unpublish_campaign($campaign_id)`** - Returns campaign to unpublished/draft status
-4. **`reactivate_campaign($campaign_id)`** - Reactivates a deactivated campaign (returns to unpublished)
-
-## Deliverables
-
-| Artifact | Location | Status |
-|----------|----------|--------|
-| API methods | `includes/class-api-client.php` lines 366-430 | Complete |
-| Syntax validation | `php -l` | Passed |
-| Staging deployment | WP Engine staging | Deployed (connectivity blocked) |
-
-## Commits
-
-| Hash | Description | Files |
-|------|-------------|-------|
-| `e38e439` | feat(02-01): add campaign lifecycle API methods | `includes/class-api-client.php` |
-
-## Technical Details
-
-### API Endpoints Used
+Added four campaign lifecycle methods to `FCG_GFM_API_Client` class:
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `duplicate_campaign()` | `POST /campaigns/{id}/actions/duplicate` | Create campaign from template |
-| `publish_campaign()` | `POST /campaigns/{id}/actions/publish` | Make campaign active |
-| `unpublish_campaign()` | `POST /campaigns/{id}/actions/unpublish` | Return to draft status |
-| `reactivate_campaign()` | `POST /campaigns/{id}/actions/reactivate` | Restore deactivated campaign |
+| `duplicate_campaign()` | POST `/campaigns/{id}/actions/duplicate` | Create new campaign from template |
+| `publish_campaign()` | POST `/campaigns/{id}/actions/publish` | Make campaign active/visible |
+| `unpublish_campaign()` | POST `/campaigns/{id}/actions/unpublish` | Return to draft status |
+| `reactivate_campaign()` | POST `/campaigns/{id}/actions/reactivate` | Restore deactivated campaign |
 
-### Implementation Notes
+## Implementation Details
 
-- All methods follow existing class patterns (PHPDoc, type hints, standard response array)
-- `duplicate_campaign()` accepts `overrides` array and sets `duplicates: []` to skip related objects
-- Methods added after `deactivate_campaign()` for logical grouping
+**File modified:** `includes/class-api-client.php` (lines 366-424)
+
+**Key patterns:**
+- `duplicate_campaign()` accepts `$overrides` array for name, goal, etc.
+- Request body includes `duplicates: []` to skip related objects (tickets, ecards)
+- New campaigns start in "unpublished" status (requires `publish_campaign()` afterward)
+- All methods return standard `['success' => bool, 'data' => array, 'error' => string]`
 
 ## Verification
 
-- [x] Local syntax check: `php -l includes/class-api-client.php` - No errors
-- [x] Methods exist: All four methods found in file
-- [x] Code committed with atomic commit
-- [ ] Staging functional test: Blocked by SSH connectivity timeout
+- PHP syntax: No errors
+- Methods exist: All 4 confirmed via grep
+- Staging test: Skipped (SSH timeout - network issue)
 
-**Note:** Staging verification blocked by network connectivity to WP Engine. Code is deployed via rsync. Wave 2 plans will perform integration testing.
+## Artifacts
 
-## Deviations
-
-None - implementation followed plan exactly.
+```yaml
+path: includes/class-api-client.php
+provides: Campaign lifecycle API methods
+exports:
+  - duplicate_campaign
+  - publish_campaign
+  - unpublish_campaign
+  - reactivate_campaign
+```
 
 ## Next Steps
 
-Wave 2 plans (02-02, 02-03) depend on these methods and will validate them through integration testing.
+Plan 02-02 will use these methods to implement the sync handler logic that creates campaigns when funds are published.

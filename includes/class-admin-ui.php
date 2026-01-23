@@ -41,6 +41,9 @@ class FCG_GFM_Admin_UI {
 
         // Enqueue admin scripts
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+
+        // Save fundraising goal
+        add_action('save_post_funds', [$this, 'save_fundraising_goal'], 10, 2);
     }
 
     /**
@@ -123,6 +126,7 @@ class FCG_GFM_Admin_UI {
         $last_sync = get_post_meta($post->ID, '_gofundme_last_sync', true);
         $sync_source = get_post_meta($post->ID, '_gofundme_sync_source', true);
         $sync_error = get_post_meta($post->ID, '_gofundme_sync_error', true);
+        $fundraising_goal = get_post_meta($post->ID, '_gofundme_fundraising_goal', true);
 
         wp_nonce_field('fcg_gfm_sync_now', 'fcg_gfm_sync_nonce');
         ?>
@@ -147,6 +151,22 @@ class FCG_GFM_Admin_UI {
                 <strong>Last Source:</strong><br>
                 <?php echo $sync_source ? esc_html(ucfirst($sync_source)) : '<em>Unknown</em>'; ?>
             </p>
+
+            <p>
+                <label for="fcg-fundraising-goal"><strong>Fundraising Goal:</strong></label><br>
+                <span style="display: inline-flex; align-items: center;">
+                    <span style="margin-right: 4px;">$</span>
+                    <input type="text"
+                           id="fcg-fundraising-goal"
+                           name="fcg_fundraising_goal"
+                           value="<?php echo esc_attr($fundraising_goal ? number_format((int) $fundraising_goal) : ''); ?>"
+                           placeholder="e.g., 5,000"
+                           class="regular-text"
+                           style="width: 120px;"
+                           inputmode="numeric">
+                </span>
+            </p>
+            <p class="description" style="margin-top: 0;">Optional. Goal amount for this fund's campaign.</p>
 
             <?php if ($sync_error): ?>
             <p class="fcg-sync-error-message">
@@ -597,5 +617,44 @@ class FCG_GFM_Admin_UI {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('fcg_gfm_sync_now'),
         ]);
+    }
+
+    /**
+     * Save fundraising goal from meta box
+     *
+     * @param int $post_id Post ID
+     * @param WP_Post $post Post object
+     */
+    public function save_fundraising_goal(int $post_id, WP_Post $post): void {
+        // Check nonce (uses same nonce as sync meta box)
+        if (!isset($_POST['fcg_gfm_sync_nonce']) ||
+            !wp_verify_nonce($_POST['fcg_gfm_sync_nonce'], 'fcg_gfm_sync_now')) {
+            return;
+        }
+
+        // Check autosave
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        // Check permissions
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        // Process fundraising goal
+        if (isset($_POST['fcg_fundraising_goal'])) {
+            $goal = sanitize_text_field($_POST['fcg_fundraising_goal']);
+            // Remove commas and non-numeric characters (except decimal point)
+            $goal = preg_replace('/[^0-9.]/', '', $goal);
+
+            if (is_numeric($goal) && floatval($goal) > 0) {
+                // Store as integer (cents would require different handling)
+                update_post_meta($post_id, '_gofundme_fundraising_goal', intval(floatval($goal)));
+            } else {
+                // Empty or invalid - remove the meta
+                delete_post_meta($post_id, '_gofundme_fundraising_goal');
+            }
+        }
     }
 }

@@ -25,7 +25,7 @@ Plans for these phases will include explicit user steps. For Classy UI tasks, th
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Configuration** - Add template campaign setting and fundraising goal field
+- [x] **Phase 1: Configuration** - Add template campaign setting and fundraising goal field
 - [ ] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
 - [ ] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
 - [ ] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
@@ -41,9 +41,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md - Create template campaign in Classy sandbox (manual)
-- [ ] 01-02-PLAN.md - Add template campaign ID setting with API validation
-- [ ] 01-03-PLAN.md - Add fundraising goal field to fund meta box
+- [x] 01-01-PLAN.md - Create template campaign in Classy sandbox (manual)
+- [x] 01-02-PLAN.md - Add template campaign ID setting with API validation
+- [x] 01-03-PLAN.md - Add fundraising goal field to fund meta box
 
 **Success Criteria** (what must be TRUE):
   1. Admin can set template campaign ID in plugin settings
@@ -144,7 +144,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Configuration | 0/3 | Planned | - |
+| 1. Configuration | 3/3 | Complete | 2026-01-23 |
 | 2. Campaign Push Sync | 0/0 | Not started | - |
 | 3. Campaign Status Management | 0/0 | Not started | - |
 | 4. Inbound Sync | 0/0 | Not started | - |

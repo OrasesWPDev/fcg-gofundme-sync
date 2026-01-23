@@ -364,6 +364,63 @@ class FCG_GFM_API_Client {
     }
 
     /**
+     * Duplicate a campaign from a source campaign (template)
+     *
+     * Creates a new campaign by duplicating an existing one. The new campaign
+     * starts in "unpublished" status and requires publish_campaign() to go live.
+     *
+     * @param int|string $source_campaign_id Source campaign ID to duplicate from
+     * @param array $overrides Optional field overrides (name, raw_goal, raw_currency_code, etc.)
+     * @return array Response with new campaign data (id, canonical_url, status)
+     */
+    public function duplicate_campaign($source_campaign_id, array $overrides = []): array {
+        $data = [
+            'overrides' => $overrides,
+            'duplicates' => [], // Don't duplicate related objects (tickets, ecards)
+        ];
+        return $this->request('POST', "/campaigns/{$source_campaign_id}/actions/duplicate", $data);
+    }
+
+    /**
+     * Publish a campaign
+     *
+     * Makes a campaign active and visible to donors. Required after duplication
+     * since new campaigns start in "unpublished" status.
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @return array Response
+     */
+    public function publish_campaign($campaign_id): array {
+        return $this->request('POST', "/campaigns/{$campaign_id}/actions/publish", []);
+    }
+
+    /**
+     * Unpublish a campaign
+     *
+     * Returns a campaign to unpublished (draft) status without deactivating.
+     * Use this for temporarily hiding a campaign that may be republished.
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @return array Response
+     */
+    public function unpublish_campaign($campaign_id): array {
+        return $this->request('POST', "/campaigns/{$campaign_id}/actions/unpublish", []);
+    }
+
+    /**
+     * Reactivate a deactivated campaign
+     *
+     * Returns a deactivated campaign to unpublished status. Requires
+     * publish_campaign() afterward to make it active again.
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @return array Response
+     */
+    public function reactivate_campaign($campaign_id): array {
+        return $this->request('POST', "/campaigns/{$campaign_id}/actions/reactivate", []);
+    }
+
+    /**
      * Log error message
      * 
      * @param string $message Error message

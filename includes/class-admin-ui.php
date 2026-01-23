@@ -185,6 +185,11 @@ class FCG_GFM_Admin_UI {
      * Register settings
      */
     public function register_settings(): void {
+        register_setting('fcg_gfm_sync', 'fcg_gfm_template_campaign_id', [
+            'type' => 'integer',
+            'default' => 0,
+            'sanitize_callback' => [$this, 'validate_template_campaign_id'],
+        ]);
         register_setting('fcg_gfm_sync', 'fcg_gfm_poll_enabled', [
             'type' => 'boolean',
             'default' => true,
@@ -193,6 +198,89 @@ class FCG_GFM_Admin_UI {
             'type' => 'integer',
             'default' => 900, // 15 minutes
         ]);
+    }
+
+    /**
+     * Validate template campaign ID against Classy API
+     *
+     * @param mixed $input Input value
+     * @return int Validated campaign ID or previous value on error
+     */
+    public function validate_template_campaign_id($input): int {
+        $input = intval($input);
+
+        // Allow clearing the setting
+        if ($input === 0) {
+            delete_option('fcg_gfm_template_campaign_name');
+            delete_option('fcg_gfm_template_validation_failed');
+            delete_option('fcg_gfm_template_validation_pending');
+            return 0;
+        }
+
+        $api = new FCG_GFM_API_Client();
+
+        // Check if API is configured first
+        if (!$api->is_configured()) {
+            add_settings_error(
+                'fcg_gfm_template_campaign_id',
+                'api_not_configured',
+                'Cannot validate template: API credentials not configured.',
+                'error'
+            );
+            return get_option('fcg_gfm_template_campaign_id', 0);
+        }
+
+        $result = $api->get_campaign($input);
+
+        if (!$result['success']) {
+            // Check if network/connection issue vs invalid ID
+            $error_msg = $result['error'] ?? 'Unknown error';
+            $is_connection_error = (
+                stripos($error_msg, 'connection') !== false ||
+                stripos($error_msg, 'timeout') !== false ||
+                stripos($error_msg, 'resolve') !== false ||
+                ($result['http_code'] ?? 0) >= 500
+            );
+
+            if ($is_connection_error) {
+                // Schedule background re-validation
+                if (!wp_next_scheduled('fcg_gfm_revalidate_template')) {
+                    wp_schedule_single_event(time() + 900, 'fcg_gfm_revalidate_template');
+                }
+                update_option('fcg_gfm_template_validation_pending', true, false);
+                add_settings_error(
+                    'fcg_gfm_template_campaign_id',
+                    'api_unreachable',
+                    'Template ID saved. Could not verify with API (connection issue). Re-validation scheduled.',
+                    'warning'
+                );
+                return $input;
+            }
+
+            // Invalid ID - block save
+            add_settings_error(
+                'fcg_gfm_template_campaign_id',
+                'invalid_id',
+                'Invalid campaign ID: ' . esc_html($error_msg),
+                'error'
+            );
+            return get_option('fcg_gfm_template_campaign_id', 0);
+        }
+
+        // Valid - store campaign name
+        $campaign_name = $result['data']['name'] ?? 'Unknown';
+        update_option('fcg_gfm_template_campaign_name', $campaign_name, false);
+        delete_option('fcg_gfm_template_validation_failed');
+        delete_option('fcg_gfm_template_validation_pending');
+
+        add_settings_error(
+            'fcg_gfm_template_campaign_id',
+            'valid_id',
+            'Template campaign validated: ' . esc_html($campaign_name),
+            'success'
+        );
+
+        return $input;
     }
 
     /**
@@ -207,14 +295,67 @@ class FCG_GFM_Admin_UI {
         $poll_interval = get_option('fcg_gfm_poll_interval', 900);
         $last_poll = get_option('fcg_gfm_last_poll');
         $conflicts = get_option('fcg_gfm_conflict_log', []);
+
+        // Template campaign settings
+        $api = new FCG_GFM_API_Client();
+        $api_configured = $api->is_configured();
+        $template_id = get_option('fcg_gfm_template_campaign_id', 0);
+        $template_name = get_option('fcg_gfm_template_campaign_name', '');
+        $validation_failed = get_option('fcg_gfm_template_validation_failed', false);
+        $validation_pending = get_option('fcg_gfm_template_validation_pending', false);
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+
+            <div class="notice notice-<?php echo $api_configured ? 'info' : 'warning'; ?>" style="margin: 15px 0;">
+                <p>
+                    <strong>API Status:</strong>
+                    <?php if ($api_configured): ?>
+                        <span style="color: #46b450;">Connected</span>
+                    <?php else: ?>
+                        <span style="color: #dc3232;">Not Configured</span>
+                    <?php endif; ?>
+
+                    <?php if ($template_id && $template_name && !$validation_failed && !$validation_pending): ?>
+                        &nbsp;|&nbsp; <strong>Template:</strong> <?php echo esc_html($template_name); ?>
+                        <span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
+                    <?php elseif ($template_id && $validation_pending): ?>
+                        &nbsp;|&nbsp; <strong>Template:</strong> Validation pending
+                        <span class="dashicons dashicons-clock" style="color: #f0b849;"></span>
+                    <?php elseif ($template_id && $validation_failed): ?>
+                        &nbsp;|&nbsp; <strong>Template:</strong> Validation failed
+                        <span class="dashicons dashicons-warning" style="color: #dc3232;"></span>
+                    <?php endif; ?>
+                </p>
+            </div>
 
             <form method="post" action="options.php">
                 <?php settings_fields('fcg_gfm_sync'); ?>
 
                 <table class="form-table">
+                    <tr>
+                        <th scope="row">Template Campaign ID</th>
+                        <td>
+                            <input type="number"
+                                   name="fcg_gfm_template_campaign_id"
+                                   value="<?php echo esc_attr($template_id); ?>"
+                                   class="regular-text"
+                                   min="0"
+                                   step="1">
+                            <?php if ($template_name && !$validation_failed): ?>
+                                <p class="description" style="color: #46b450;">
+                                    <span class="dashicons dashicons-yes"></span>
+                                    Template: <?php echo esc_html($template_name); ?>
+                                </p>
+                            <?php endif; ?>
+                            <p class="description">
+                                Enter the campaign ID to use as template for fund campaigns.
+                                <a href="https://www.classy.org/admin/campaigns" target="_blank">
+                                    Find campaign ID in Classy <span class="dashicons dashicons-external"></span>
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
                     <tr>
                         <th scope="row">Auto-Polling</th>
                         <td>
@@ -284,9 +425,57 @@ class FCG_GFM_Admin_UI {
     }
 
     /**
+     * Background re-validation of template campaign ID
+     * Called via WP-Cron when API was unreachable during initial validation
+     */
+    public static function revalidate_template_campaign(): void {
+        $template_id = get_option('fcg_gfm_template_campaign_id', 0);
+        if (!$template_id) {
+            delete_option('fcg_gfm_template_validation_failed');
+            delete_option('fcg_gfm_template_validation_pending');
+            return;
+        }
+
+        $api = new FCG_GFM_API_Client();
+        if (!$api->is_configured()) {
+            update_option('fcg_gfm_template_validation_failed', true, false);
+            delete_option('fcg_gfm_template_validation_pending');
+            return;
+        }
+
+        $result = $api->get_campaign($template_id);
+
+        if (!$result['success']) {
+            update_option('fcg_gfm_template_validation_failed', true, false);
+            delete_option('fcg_gfm_template_validation_pending');
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[FCG GoFundMe Sync] Background template validation failed: ' . ($result['error'] ?? 'Unknown error'));
+            }
+        } else {
+            // Success
+            update_option('fcg_gfm_template_campaign_name', $result['data']['name'] ?? 'Unknown', false);
+            delete_option('fcg_gfm_template_validation_failed');
+            delete_option('fcg_gfm_template_validation_pending');
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[FCG GoFundMe Sync] Background template validation succeeded: ' . ($result['data']['name'] ?? 'Unknown'));
+            }
+        }
+    }
+
+    /**
      * Show admin notices for sync errors
      */
     public function show_sync_notices(): void {
+        // Check for template validation failure (show on all admin pages)
+        if (get_option('fcg_gfm_template_validation_failed')) {
+            printf(
+                '<div class="notice notice-error is-dismissible"><p><strong>GoFundMe Pro Sync:</strong> Template campaign ID validation failed. <a href="%s">Check settings</a></p></div>',
+                esc_url(admin_url('edit.php?post_type=funds&page=fcg-gfm-sync-settings'))
+            );
+        }
+
         $screen = get_current_screen();
 
         if (!$screen || $screen->post_type !== 'funds') {

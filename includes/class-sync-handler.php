@@ -384,27 +384,87 @@ class FCG_GFM_Sync_Handler {
     }
 
     /**
-     * Create a new campaign in GoFundMe Pro
+     * Create a new campaign in GoFundMe Pro via template duplication
+     *
+     * Uses the duplicate-then-publish workflow because POST /campaigns returns 403.
+     * Template campaign ID is configured in Phase 1 plugin settings.
      *
      * @param int $post_id WordPress post ID
-     * @param array $data Campaign data
+     * @param array $data Campaign data (name, goal, started_at, overview, external_reference_id)
      */
     private function create_campaign_in_gfm(int $post_id, array $data): void {
-        $result = $this->api->create_campaign($data);
-
-        if ($result['success'] && !empty($result['data']['id'])) {
-            $campaign_id = $result['data']['id'];
-            $campaign_url = $result['data']['canonical_url'] ?? '';
-
-            update_post_meta($post_id, self::META_CAMPAIGN_ID, $campaign_id);
-            update_post_meta($post_id, self::META_CAMPAIGN_URL, $campaign_url);
-            update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
-
-            $this->log_info("Created campaign {$campaign_id} for post {$post_id}");
-        } else {
-            $error = $result['error'] ?? 'Unknown error';
-            $this->log_error("Failed to create campaign for post {$post_id}: {$error}");
+        // 1. Check prerequisites - get template campaign ID from settings
+        $template_id = get_option('fcg_gfm_template_campaign_id');
+        if (empty($template_id)) {
+            $this->log_error("Cannot create campaign for post {$post_id}: No template campaign ID configured (fcg_gfm_template_campaign_id)");
+            return;
         }
+
+        // 2. Race condition protection - check for existing lock
+        $lock_key = "fcg_gfm_creating_campaign_{$post_id}";
+        if (get_transient($lock_key)) {
+            $this->log_info("Campaign creation already in progress for post {$post_id}, skipping duplicate request");
+            return;
+        }
+
+        // Set transient lock for 60 seconds
+        set_transient($lock_key, true, 60);
+
+        // 3. Build overrides array for duplication
+        $overrides = [
+            'name'                  => $data['name'],
+            'raw_goal'              => isset($data['goal']) ? (string) $data['goal'] : '1000',
+            'raw_currency_code'     => 'USD',
+            'external_reference_id' => $data['external_reference_id'] ?? (string) $post_id,
+        ];
+
+        // Add started_at in ISO 8601 format if provided
+        if (!empty($data['started_at'])) {
+            $overrides['started_at'] = date('c', strtotime($data['started_at']));
+        }
+
+        // 4. Duplicate template campaign
+        $result = $this->api->duplicate_campaign($template_id, $overrides);
+
+        if (!$result['success'] || empty($result['data']['id'])) {
+            $error = $result['error'] ?? 'Unknown error';
+            $this->log_error("Failed to duplicate campaign template for post {$post_id}: {$error}");
+            delete_transient($lock_key);
+            return;
+        }
+
+        $campaign_id = $result['data']['id'];
+        $campaign_url = $result['data']['canonical_url'] ?? '';
+
+        $this->log_info("Duplicated template campaign to new campaign {$campaign_id} for post {$post_id}");
+
+        // 5. Update overview if present (not available in duplication overrides)
+        if (!empty($data['overview'])) {
+            $update_result = $this->api->update_campaign($campaign_id, ['overview' => $data['overview']]);
+            if (!$update_result['success']) {
+                $this->log_info("Warning: Could not update overview for campaign {$campaign_id}: " . ($update_result['error'] ?? 'Unknown'));
+                // Continue - overview update is non-fatal
+            }
+        }
+
+        // 6. Publish campaign to make it active
+        $publish_result = $this->api->publish_campaign($campaign_id);
+        if (!$publish_result['success']) {
+            $this->log_info("Warning: Could not publish campaign {$campaign_id}: " . ($publish_result['error'] ?? 'Unknown'));
+            // Continue - campaign can be published manually later
+        } else {
+            $this->log_info("Published campaign {$campaign_id} for post {$post_id}");
+        }
+
+        // 7. Store campaign data in post meta
+        update_post_meta($post_id, self::META_CAMPAIGN_ID, $campaign_id);
+        update_post_meta($post_id, self::META_CAMPAIGN_URL, $campaign_url);
+        update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
+
+        // 8. Cleanup - delete transient lock
+        delete_transient($lock_key);
+
+        $this->log_info("Created campaign {$campaign_id} for post {$post_id} via template duplication");
     }
 
     /**
@@ -433,6 +493,11 @@ class FCG_GFM_Sync_Handler {
      * @param WP_Post $post Post object
      */
     private function sync_campaign_to_gofundme(int $post_id, WP_Post $post): void {
+        // Check if campaign sync is disabled for this fund
+        if (!$this->should_sync_campaign($post_id)) {
+            return;
+        }
+
         $campaign_data = $this->build_campaign_data($post);
         $campaign_id = $this->get_campaign_id($post_id);
 
@@ -465,6 +530,28 @@ class FCG_GFM_Sync_Handler {
     private function get_campaign_url(int $post_id): ?string {
         $campaign_url = get_post_meta($post_id, self::META_CAMPAIGN_URL, true);
         return !empty($campaign_url) ? $campaign_url : null;
+    }
+
+    /**
+     * Check if campaign sync is enabled for this fund
+     *
+     * @param int $post_id Post ID
+     * @return bool True if campaign should be synced
+     */
+    private function should_sync_campaign(int $post_id): bool {
+        // Check if ACF is available
+        if (!function_exists('get_field')) {
+            return true; // Default to sync if ACF not available
+        }
+
+        $gfm_settings = get_field(self::ACF_GROUP_KEY, $post_id);
+
+        // Check for explicit disable
+        if (!empty($gfm_settings['disable_campaign_sync'])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

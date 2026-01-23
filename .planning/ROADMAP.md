@@ -10,7 +10,8 @@ Some phases require manual work that cannot be automated via API:
 
 | Phase | Manual Task | Assistance Options | Status |
 |-------|-------------|-------------------|--------|
-| 1 | Create template campaign in Classy sandbox | Screenshots for guidance, or `/chrome` browser automation | Pending |
+| 1 | Create template campaign in Classy sandbox | Screenshots for guidance, or `/chrome` browser automation | Complete |
+| 2 | Add ACF checkbox field for campaign sync opt-out | WordPress admin UI | Pending |
 | 4 | Enable Alternate Cron on WP Engine | WP Engine dashboard toggle | Staging done |
 
 Plans for these phases will include explicit user steps. For Classy UI tasks, the user can:
@@ -62,16 +63,23 @@ This phase includes manual Classy sandbox work that cannot be done via API:
 **Goal**: Published WordPress funds automatically create and update campaigns in Classy
 **Depends on**: Phase 1 (requires template campaign ID)
 **Requirements**: CAMP-01, CAMP-02, CAMP-03, CAMP-04, CAMP-05, CAMP-06
+**Plans:** 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md - Add campaign lifecycle API methods (duplicate, publish, unpublish, reactivate)
+- [ ] 02-02-PLAN.md - Rewrite campaign creation to use duplication workflow
+- [ ] 02-03-PLAN.md - Fix campaign restore workflow and add sync opt-out
+- [ ] 02-04-PLAN.md - E2E verification and ACF field setup (includes human step)
+
 **Success Criteria** (what must be TRUE):
   1. When fund is published, campaign is created in Classy via template duplication
   2. When fund title or goal is updated, campaign name and goal update in Classy
   3. When fund is trashed, campaign is deactivated in Classy
   4. When fund is restored from trash, campaign is reactivated and published in Classy
   5. Campaign ID and URL are stored in fund post meta after sync
-**Plans**: TBD
 
-Plans:
-- [ ] TBD (will be created during plan-phase)
+**Manual Work Required:**
+- Add "Disable Campaign Sync" checkbox field to ACF field group (Plan 02-04 checkpoint)
 
 ### Phase 3: Campaign Status Management
 **Goal**: Campaign publish/unpublish status stays synchronized with WordPress post status
@@ -145,7 +153,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Configuration | 3/3 | Complete | 2026-01-23 |
-| 2. Campaign Push Sync | 0/0 | Not started | - |
+| 2. Campaign Push Sync | 0/4 | Ready | - |
 | 3. Campaign Status Management | 0/0 | Not started | - |
 | 4. Inbound Sync | 0/0 | Not started | - |
 | 5. Bulk Migration | 0/0 | Not started | - |

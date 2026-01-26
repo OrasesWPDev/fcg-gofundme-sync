@@ -313,12 +313,19 @@ class FCG_GFM_Sync_Handler {
                         $this->log_info("Status change: activated and updated campaign {$campaign_id} for post {$post->ID}");
                     }
                 }
-            } else {
-                $campaign_result = $this->api->deactivate_campaign($campaign_id);
+            } elseif ($new_status === 'draft') {
+                // STAT-01: Unpublish campaign when fund is set to draft
+                // Note: Unpublish is reversible with a single publish call
+                // Deactivate (used for trash) requires reactivate+publish
+                $campaign_result = $this->api->unpublish_campaign($campaign_id);
                 if ($campaign_result['success']) {
-                    $this->log_info("Status change: deactivated campaign {$campaign_id} for post {$post->ID}");
+                    $this->log_info("Status change: unpublished campaign {$campaign_id} for post {$post->ID}");
+                } else {
+                    $this->log_error("Failed to unpublish campaign {$campaign_id}: " . ($campaign_result['error'] ?? 'Unknown error'));
                 }
             }
+            // NO else clause here - trash is handled by on_trash_fund(), delete by on_delete_fund()
+            // Keeping an else would cause double deactivation (on_status_change + on_trash_fund)
         }
     }
 

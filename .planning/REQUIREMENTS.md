@@ -49,6 +49,13 @@ Requirements for bi-directional sync with campaign support. Each maps to roadmap
 - [ ] **ADMN-03**: Last sync timestamp displayed
 - [ ] **ADMN-04**: Manual "Sync Now" button for individual fund
 
+### Frontend Embed Integration
+
+- [ ] **EMBD-01**: Fund single template displays Classy donation embed
+- [ ] **EMBD-02**: Embed dynamically uses campaign ID from fund post meta
+- [ ] **EMBD-03**: Legacy donation form replaced/removed
+- [ ] **EMBD-04**: Graceful fallback when campaign ID not present
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -108,10 +115,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMN-02 | Phase 6 | Pending |
 | ADMN-03 | Phase 6 | Pending |
 | ADMN-04 | Phase 6 | Pending |
+| EMBD-01 | Phase 7 | Pending |
+| EMBD-02 | Phase 7 | Pending |
+| EMBD-03 | Phase 7 | Pending |
+| EMBD-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 24 total
-- Mapped to phases: 24
+- v1 requirements: 28 total
+- Mapped to phases: 28
 - Unmapped: 0 ✓
 
 ---

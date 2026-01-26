@@ -27,11 +27,12 @@ Plans for these phases will include explicit user steps. For Classy UI tasks, th
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Configuration** - Add template campaign setting and fundraising goal field
-- [ ] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
+- [x] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
 - [ ] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
 - [ ] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
 - [ ] **Phase 5: Bulk Migration** - WP-CLI tool to create campaigns for existing funds
 - [ ] **Phase 6: Admin UI** - Display campaign data and sync controls in WordPress admin
+- [ ] **Phase 7: Frontend Embed Integration** - Replace legacy donation form with Classy embed on fund pages
 
 ## Phase Details
 
@@ -66,10 +67,10 @@ This phase includes manual Classy sandbox work that cannot be done via API:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 02-01-PLAN.md - Add campaign lifecycle API methods (duplicate, publish, unpublish, reactivate)
-- [ ] 02-02-PLAN.md - Rewrite campaign creation to use duplication workflow
-- [ ] 02-03-PLAN.md - Fix campaign restore workflow and add sync opt-out
-- [ ] 02-04-PLAN.md - E2E verification and ACF field setup (includes human step)
+- [x] 02-01-PLAN.md - Add campaign lifecycle API methods (duplicate, publish, unpublish, reactivate)
+- [x] 02-02-PLAN.md - Rewrite campaign creation to use duplication workflow
+- [x] 02-03-PLAN.md - Fix campaign restore workflow and add sync opt-out
+- [x] 02-04-PLAN.md - E2E verification and ACF field setup (includes human step)
 
 **Success Criteria** (what must be TRUE):
   1. When fund is published, campaign is created in Classy via template duplication
@@ -145,16 +146,32 @@ Plans:
 Plans:
 - [ ] TBD (will be created during plan-phase)
 
+### Phase 7: Frontend Embed Integration
+**Goal**: Public fund pages use Classy's embedded donation form instead of legacy cart system
+**Depends on**: Phase 2 (requires campaigns to exist with valid IDs)
+**Requirements**: EMBD-01, EMBD-02, EMBD-03, EMBD-04
+**Success Criteria** (what must be TRUE):
+  1. Fund single template displays Classy donation embed instead of legacy form
+  2. Embed uses the campaign ID stored in fund post meta
+  3. Embed loads correctly for API-created campaigns
+  4. Legacy js-add-to-cart form is removed or conditionally hidden
+  5. Fallback behavior when fund has no campaign ID
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (will be created during plan-phase)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Configuration | 3/3 | Complete | 2026-01-23 |
-| 2. Campaign Push Sync | 0/4 | Ready | - |
+| 2. Campaign Push Sync | 4/4 | Complete | 2026-01-26 |
 | 3. Campaign Status Management | 0/0 | Not started | - |
 | 4. Inbound Sync | 0/0 | Not started | - |
 | 5. Bulk Migration | 0/0 | Not started | - |
 | 6. Admin UI | 0/0 | Not started | - |
+| 7. Frontend Embed Integration | 0/0 | Not started | - |

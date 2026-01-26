@@ -376,7 +376,7 @@ class FCG_GFM_API_Client {
     public function duplicate_campaign($source_campaign_id, array $overrides = []): array {
         $data = [
             'overrides' => $overrides,
-            'duplicates' => [], // Don't duplicate related objects (tickets, ecards)
+            'duplicates' => ['theme'], // Copy theme/design settings from template
         ];
         return $this->request('POST', "/campaigns/{$source_campaign_id}/duplicate", $data);
     }

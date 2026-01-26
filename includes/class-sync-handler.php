@@ -301,19 +301,77 @@ class FCG_GFM_Sync_Handler {
 
         // Update campaign based on publish status
         $campaign_id = $this->get_campaign_id($post->ID);
-        if ($campaign_id) {
+        if ($campaign_id && $this->should_sync_campaign($post->ID)) {
             if ($is_active) {
-                $campaign_data = $this->build_campaign_data($post);
-                $campaign_result = $this->api->update_campaign($campaign_id, $campaign_data);
+                // Ensure campaign is active (handles deactivated campaigns)
+                if ($this->ensure_campaign_active($campaign_id, $post->ID)) {
+                    // Update with latest data
+                    $campaign_data = $this->build_campaign_data($post);
+                    $campaign_result = $this->api->update_campaign($campaign_id, $campaign_data);
+                    if ($campaign_result['success']) {
+                        update_post_meta($post->ID, self::META_KEY_LAST_SYNC, current_time('mysql'));
+                        $this->log_info("Status change: activated and updated campaign {$campaign_id} for post {$post->ID}");
+                    }
+                }
             } else {
                 $campaign_result = $this->api->deactivate_campaign($campaign_id);
-            }
-
-            if ($campaign_result['success']) {
-                $status_text = $is_active ? 'activated' : 'deactivated';
-                $this->log_info("Status change: {$status_text} campaign {$campaign_id} for post {$post->ID}");
+                if ($campaign_result['success']) {
+                    $this->log_info("Status change: deactivated campaign {$campaign_id} for post {$post->ID}");
+                }
             }
         }
+    }
+
+    /**
+     * Ensure campaign is in active status
+     *
+     * Handles the case where a campaign is deactivated and needs to be
+     * reactivated then published. This is a two-step process in Classy API.
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @param int $post_id WordPress post ID (for logging)
+     * @return bool True if campaign is now active
+     */
+    private function ensure_campaign_active($campaign_id, int $post_id): bool {
+        // Check current campaign status
+        $result = $this->api->get_campaign($campaign_id);
+        if (!$result['success']) {
+            // Campaign doesn't exist - clear stale meta
+            if (($result['http_code'] ?? 0) === 404) {
+                $this->log_error("Campaign {$campaign_id} not found (404) for post {$post_id} - clearing stale meta");
+                delete_post_meta($post_id, self::META_CAMPAIGN_ID);
+                delete_post_meta($post_id, self::META_CAMPAIGN_URL);
+            } else {
+                $this->log_error("Failed to get campaign {$campaign_id} status: " . ($result['error'] ?? 'Unknown'));
+            }
+            return false;
+        }
+
+        $status = $result['data']['status'] ?? '';
+
+        if ($status === 'active') {
+            return true; // Already active
+        }
+
+        // If deactivated, need to reactivate first
+        if ($status === 'deactivated') {
+            $reactivate = $this->api->reactivate_campaign($campaign_id);
+            if (!$reactivate['success']) {
+                $this->log_error("Failed to reactivate campaign {$campaign_id}: " . ($reactivate['error'] ?? 'Unknown'));
+                return false;
+            }
+            $this->log_info("Reactivated deactivated campaign {$campaign_id} for post {$post_id}");
+        }
+
+        // Now publish (works for unpublished or just-reactivated)
+        $publish = $this->api->publish_campaign($campaign_id);
+        if (!$publish['success']) {
+            $this->log_error("Failed to publish campaign {$campaign_id}: " . ($publish['error'] ?? 'Unknown'));
+            return false;
+        }
+        $this->log_info("Published campaign {$campaign_id} for post {$post_id}");
+
+        return true;
     }
     
     /**

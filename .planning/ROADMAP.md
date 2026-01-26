@@ -125,16 +125,17 @@ Plans:
 **Goal**: All 758 existing funds without campaigns get campaigns created via WP-CLI
 **Depends on**: Phases 2-3 (requires sync operations validated)
 **Requirements**: MIGR-01, MIGR-02, MIGR-03, MIGR-04, MIGR-05
+**Plans:** 1 plan
+
+Plans:
+- [ ] 05-01-PLAN.md - Create WP-CLI migration command with batch processing
+
 **Success Criteria** (what must be TRUE):
   1. WP-CLI command creates campaigns for funds lacking campaign IDs
   2. Migration runs in 50-fund batches to avoid timeouts
   3. Migration can be resumed if interrupted (idempotent)
   4. Dry-run mode shows what would happen without making changes
   5. Migration logs success/failure for each fund
-**Plans**: TBD
-
-Plans:
-- [ ] TBD (will be created during plan-phase)
 
 ### Phase 6: Admin UI
 **Goal**: Campaign data and sync status are visible in WordPress admin interface
@@ -176,6 +177,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Campaign Push Sync | 4/4 | Complete | 2026-01-26 |
 | 3. Campaign Status Management | 1/1 | Complete | 2026-01-26 |
 | 4. Inbound Sync | 1/1 | Complete | 2026-01-26 |
-| 5. Bulk Migration | 0/0 | Not started | - |
+| 5. Bulk Migration | 0/1 | Planned | - |
 | 6. Admin UI | 0/0 | Not started | - |
 | 7. Frontend Embed Integration | 0/0 | Not started | - |

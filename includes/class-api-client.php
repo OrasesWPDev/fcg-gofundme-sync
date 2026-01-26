@@ -321,6 +321,19 @@ class FCG_GFM_API_Client {
     }
 
     /**
+     * Get campaign overview with donation totals
+     *
+     * Returns aggregated donation data including total raised, donor count, etc.
+     * Note: Amounts are returned as strings (e.g., "8850.00") - cast to float as needed.
+     *
+     * @param int|string $campaign_id Campaign ID
+     * @return array Response with overview data
+     */
+    public function get_campaign_overview($campaign_id): array {
+        return $this->request('GET', "/campaigns/{$campaign_id}/overview");
+    }
+
+    /**
      * Get all campaigns for the organization with pagination.
      *
      * @param int $per_page Results per page (default 100, max 100)

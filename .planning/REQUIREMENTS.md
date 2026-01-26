@@ -9,30 +9,30 @@ Requirements for bi-directional sync with campaign support. Each maps to roadmap
 
 ### Configuration
 
-- [ ] **CONF-01**: Admin can configure template campaign ID for duplication
-- [ ] **CONF-02**: fundraising_goal ACF field added to funds
+- [x] **CONF-01**: Admin can configure template campaign ID for duplication
+- [x] **CONF-02**: fundraising_goal ACF field added to funds
 
 ### Campaign Push Sync (Outbound)
 
-- [ ] **CAMP-01**: When fund is published, campaign is created via template duplication
-- [ ] **CAMP-02**: When fund is updated, campaign name and goal are updated
-- [ ] **CAMP-03**: When fund is trashed, campaign is deactivated
-- [ ] **CAMP-04**: When fund is restored from trash, campaign is reactivated and published
-- [ ] **CAMP-05**: Campaign ID is stored in `_gofundme_campaign_id` post meta
-- [ ] **CAMP-06**: Campaign URL is stored in `_gofundme_campaign_url` post meta
+- [x] **CAMP-01**: When fund is published, campaign is created via template duplication
+- [x] **CAMP-02**: When fund is updated, campaign name and goal are updated
+- [x] **CAMP-03**: When fund is trashed, campaign is deactivated
+- [x] **CAMP-04**: When fund is restored from trash, campaign is reactivated and published
+- [x] **CAMP-05**: Campaign ID is stored in `_gofundme_campaign_id` post meta
+- [x] **CAMP-06**: Campaign URL is stored in `_gofundme_campaign_url` post meta
 
 ### Campaign Status Management
 
-- [ ] **STAT-01**: When fund is unpublished (draft), campaign is unpublished
-- [ ] **STAT-02**: When fund is republished, campaign is published
-- [ ] **STAT-03**: Campaign status maps correctly: publish→active, draft→unpublished, trash→deactivated
+- [x] **STAT-01**: When fund is unpublished (draft), campaign is unpublished
+- [x] **STAT-02**: When fund is republished, campaign is published
+- [x] **STAT-03**: Campaign status maps correctly: publish→active, draft→unpublished, trash→deactivated
 
 ### Inbound Sync (Classy → WordPress)
 
-- [ ] **SYNC-01**: Donation totals are polled from Classy every 15 minutes
-- [ ] **SYNC-02**: Campaign status is polled and reflected in WordPress
-- [ ] **SYNC-03**: Goal progress percentage is calculated and stored
-- [ ] **SYNC-04**: Post meta updated with donation data without triggering outbound sync
+- [x] **SYNC-01**: Donation totals are polled from Classy every 15 minutes
+- [x] **SYNC-02**: Campaign status is polled and reflected in WordPress
+- [x] **SYNC-03**: Goal progress percentage is calculated and stored
+- [x] **SYNC-04**: Post meta updated with donation data without triggering outbound sync
 
 ### Bulk Migration
 
@@ -91,21 +91,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONF-01 | Phase 1 | Pending |
-| CONF-02 | Phase 1 | Pending |
-| CAMP-01 | Phase 2 | Pending |
-| CAMP-02 | Phase 2 | Pending |
-| CAMP-03 | Phase 2 | Pending |
-| CAMP-04 | Phase 2 | Pending |
-| CAMP-05 | Phase 2 | Pending |
-| CAMP-06 | Phase 2 | Pending |
-| STAT-01 | Phase 3 | Pending |
-| STAT-02 | Phase 3 | Pending |
-| STAT-03 | Phase 3 | Pending |
-| SYNC-01 | Phase 4 | Pending |
-| SYNC-02 | Phase 4 | Pending |
-| SYNC-03 | Phase 4 | Pending |
-| SYNC-04 | Phase 4 | Pending |
+| CONF-01 | Phase 1 | Complete |
+| CONF-02 | Phase 1 | Complete |
+| CAMP-01 | Phase 2 | Complete |
+| CAMP-02 | Phase 2 | Complete |
+| CAMP-03 | Phase 2 | Complete |
+| CAMP-04 | Phase 2 | Complete |
+| CAMP-05 | Phase 2 | Complete |
+| CAMP-06 | Phase 2 | Complete |
+| STAT-01 | Phase 3 | Complete |
+| STAT-02 | Phase 3 | Complete |
+| STAT-03 | Phase 3 | Complete |
+| SYNC-01 | Phase 4 | Complete |
+| SYNC-02 | Phase 4 | Complete |
+| SYNC-03 | Phase 4 | Complete |
+| SYNC-04 | Phase 4 | Complete |
 | MIGR-01 | Phase 5 | Pending |
 | MIGR-02 | Phase 5 | Pending |
 | MIGR-03 | Phase 5 | Pending |
@@ -127,4 +127,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after roadmap creation*
+*Last updated: 2026-01-26 after Phase 4 completion*

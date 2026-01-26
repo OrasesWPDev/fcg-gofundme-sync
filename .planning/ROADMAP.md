@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Configuration** - Add template campaign setting and fundraising goal field
 - [x] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
 - [x] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
-- [ ] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
+- [x] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
 - [ ] **Phase 5: Bulk Migration** - WP-CLI tool to create campaigns for existing funds
 - [ ] **Phase 6: Admin UI** - Display campaign data and sync controls in WordPress admin
 - [ ] **Phase 7: Frontend Embed Integration** - Replace legacy donation form with Classy embed on fund pages
@@ -107,7 +107,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 04-01-PLAN.md - Add campaign overview API method and extend sync poller
+- [x] 04-01-PLAN.md - Add campaign overview API method and extend sync poller
 
 **Success Criteria** (what must be TRUE):
   1. Donation totals are fetched from Classy every 15 minutes
@@ -175,7 +175,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Configuration | 3/3 | Complete | 2026-01-23 |
 | 2. Campaign Push Sync | 4/4 | Complete | 2026-01-26 |
 | 3. Campaign Status Management | 1/1 | Complete | 2026-01-26 |
-| 4. Inbound Sync | 0/1 | Planned | - |
+| 4. Inbound Sync | 1/1 | Complete | 2026-01-26 |
 | 5. Bulk Migration | 0/0 | Not started | - |
 | 6. Admin UI | 0/0 | Not started | - |
 | 7. Frontend Embed Integration | 0/0 | Not started | - |

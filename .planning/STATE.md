@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** When a fund is published in WordPress, both the designation AND campaign are automatically created in Classy with correct settings — no manual data entry required.
-**Current focus:** Phase 3 Complete - Ready for Phase 4
+**Current focus:** Phase 4 Complete - Ready for Phase 5
 
 ## Current Position
 
-Phase: 3 of 7 (Campaign Status Management) - COMPLETE
+Phase: 4 of 7 (Inbound Sync) - COMPLETE
 Plan: 1 of 1 complete in current phase
-Status: Phase 3 complete, all requirements verified
-Last activity: 2026-01-26 — Draft→unpublish fix, Campaign ID in meta box, admin URL fix
+Status: Phase 4 complete, all requirements verified
+Last activity: 2026-01-26 — Inbound campaign sync (donation totals, status, progress)
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8 (Phase 1: 3, Phase 2: 4, Phase 3: 1)
+- Total plans completed: 9 (Phase 1: 3, Phase 2: 4, Phase 3: 1, Phase 4: 1)
 - Average duration: N/A
 - Total execution time: N/A
 
@@ -30,12 +30,13 @@ Progress: [███████░░░] 70%
 | 01 - Configuration | 3/3 | Complete |
 | 02 - Campaign Push Sync | 4/4 | Complete |
 | 03 - Campaign Status Management | 1/1 | Complete |
+| 04 - Inbound Sync | 1/1 | Complete |
 
 **Recent Completions:**
+- 04-01: Inbound campaign sync - donation totals, status, progress (2026-01-26)
 - 03-01: Fix draft→unpublish bug + Campaign ID in meta box (2026-01-26)
 - 02-04: E2E verification & deactivated campaign fix (2026-01-26)
 - 02-03: Restore workflow & sync opt-out (b099b71, 41a4669)
-- 02-02: Campaign creation duplication workflow (b18c9ad)
 
 *Updated after each plan completion*
 
@@ -58,24 +59,20 @@ Recent decisions affecting current work:
 - **Deactivated campaigns require reactivate→publish→update sequence** (fixed 2026-01-26)
 - **Draft status calls unpublish_campaign(), not deactivate_campaign()** (fixed 2026-01-26)
 - **Campaign ID displayed prominently in admin meta box** (user feedback, 2026-01-26)
+- **Inbound sync uses set_syncing_flag() to prevent outbound sync loop** (2026-01-26)
 
 ### Pending Todos
 
 - Optional: Add ACF field `disable_campaign_sync` to gofundme_settings field group (code handles it if present)
-- Begin Phase 4 planning (Inbound Sync)
+- Production: Enable Alternate Cron in WP Engine dashboard before go-live
 
 ### Blockers/Concerns
 
-**RESOLVED - All Phase 3 issues fixed:**
-- ~~Draft status calling deactivate instead of unpublish~~ - Fixed in v2.1.4
-- ~~Campaign ID not visible in admin~~ - Added in v2.1.5
-- ~~Admin URLs pointing to wrong Classy pages~~ - Fixed in v2.1.6
+**RESOLVED - All Phase 4 issues:**
+- Inbound sync implemented and verified
 
 **Environment concerns:**
 - WP Engine staging SSH timeout (2026-01-23) - connection intermittent, use rsync (not scp)
-
-**Phase 4 concerns (from research):**
-- WP-Cron unreliable on cached sites — must use server cron in production
 
 **Phase 5 concerns (from research):**
 - API rate limits unknown — must load test to determine safe throttling
@@ -83,22 +80,25 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-01-26 (Phase 3 COMPLETE)
-Current: Phase 3 complete, ready for Phase 4
+Last session: 2026-01-26 (Phase 4 COMPLETE)
+Current: Phase 4 complete, ready for Phase 5
 
-**Phase 3 E2E Test Results (2026-01-26):**
+**Phase 4 Verification Results (2026-01-26):**
 
-| Test | Action | Expected | Result |
-|------|--------|----------|--------|
-| STAT-01 | draft → unpublished | unpublished | PASS |
-| STAT-02 | publish → active | active | PASS |
-| STAT-03 | full cycle | active→unpublished→active | PASS |
-| Trash regression | trash → deactivated | deactivated | PASS |
+| Requirement | Check | Result |
+|-------------|-------|--------|
+| SYNC-01 | Donation totals fetched every 15 min | PASS |
+| SYNC-02 | Campaign status stored in post meta | PASS |
+| SYNC-03 | Goal progress calculated and stored | PASS |
+| SYNC-04 | Inbound sync doesn't trigger outbound | PASS |
 
-**Test artifacts in sandbox:**
-- Campaign 763426: Updated_E2E_Fresh_Test (used for all status tests)
-- Fund 13771: Test fund for status transitions
+**New post meta keys added:**
+- `_gofundme_donation_total` - Total gross donations
+- `_gofundme_donor_count` - Number of unique donors
+- `_gofundme_goal_progress` - Percentage toward goal
+- `_gofundme_campaign_status` - active/unpublished/deactivated
+- `_gofundme_last_inbound_sync` - Last inbound sync timestamp
 
-**Plugin version:** 2.1.6 (deployed to staging)
+**Plugin version:** 2.2.0 (deployed to staging)
 
 Resume file: None

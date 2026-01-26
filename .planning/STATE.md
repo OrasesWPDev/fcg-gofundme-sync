@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** When a fund is published in WordPress, both the designation AND campaign are automatically created in Classy with correct settings — no manual data entry required.
-**Current focus:** Phase 5 BLOCKED — Proceeding to Phase 6 or 7
+**Current focus:** Phase 7 (Frontend Embed) — Phase 5 blocked, skipping ahead
 
 ## Current Position
 
@@ -90,8 +90,15 @@ Classy's public API `duplicateCampaign` and `publishCampaign` endpoints do not s
 
 ## Session Continuity
 
-Last session: 2026-01-26 (Phase 5 BLOCKED)
-Current: Phase 5 blocked on Classy API limitation, proceeding to Phase 6 or 7
+Last session: 2026-01-26 (Phase 5 BLOCKED → Phase 7 queued)
+Current: Phase 7 ready to plan
+
+**Next session:** Run `/gsd:plan-phase 7` to create Phase 7 plans
+
+**Context for Phase 7:**
+- Replace legacy donation form with Classy embed on fund pages
+- Can develop/test using template campaign (762966) which works
+- Requirements: EMBD-01, EMBD-02, EMBD-03, EMBD-04
 
 **Phase 4 Verification Results (2026-01-26):**
 

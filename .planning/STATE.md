@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** When a fund is published in WordPress, both the designation AND campaign are automatically created in Classy with correct settings — no manual data entry required.
-**Current focus:** Phase 4 Complete - Ready for Phase 5
+**Current focus:** Phase 5 BLOCKED — Proceeding to Phase 6 or 7
 
 ## Current Position
 
-Phase: 4 of 7 (Inbound Sync) - COMPLETE
-Plan: 1 of 1 complete in current phase
-Status: Phase 4 complete, all requirements verified
-Last activity: 2026-01-26 — Inbound campaign sync (donation totals, status, progress)
+Phase: 5 of 7 (Bulk Migration) - ⚠️ BLOCKED
+Plan: 1 plan ready but cannot execute
+Status: Awaiting Classy support response on Studio campaign API limitation
+Last activity: 2026-01-26 — Phase 5 blocked, email sent to Classy support
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 80% (blocked on external dependency)
 
 ## Performance Metrics
 
@@ -31,6 +31,7 @@ Progress: [████████░░] 80%
 | 02 - Campaign Push Sync | 4/4 | Complete |
 | 03 - Campaign Status Management | 1/1 | Complete |
 | 04 - Inbound Sync | 1/1 | Complete |
+| 05 - Bulk Migration | 0/1 | ⚠️ Blocked |
 
 **Recent Completions:**
 - 04-01: Inbound campaign sync - donation totals, status, progress (2026-01-26)
@@ -68,20 +69,29 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
+**⚠️ PHASE 5 BLOCKED (2026-01-26):**
+Classy's public API `duplicateCampaign` and `publishCampaign` endpoints do not support Studio campaign types. API-created campaigns appear "Published" in the dashboard but are broken:
+- Design tab: "Oops! Something went wrong"
+- Settings tab: "We can't seem to find that page"
+- Confirmed by Classy support (Luke Dringoli, Jon Bierma)
+
+**Action taken:** Email sent to Classy support (2026-01-26) asking for recommended path:
+1. Classy runs bulk duplications using internal Studio endpoints
+2. Provide fund list for Classy to batch-create
+3. Alternative campaign type that works with public API
+
+**Proceeding with:** Phase 6 (Admin UI) or Phase 7 (Frontend Embed) while waiting
+
 **RESOLVED - All Phase 4 issues:**
 - Inbound sync implemented and verified
 
 **Environment concerns:**
 - WP Engine staging SSH timeout (2026-01-23) - connection intermittent, use rsync (not scp)
 
-**Phase 5 concerns (from research):**
-- API rate limits unknown — must load test to determine safe throttling
-- 758 funds will timeout without proper batching (50 per batch recommended)
-
 ## Session Continuity
 
-Last session: 2026-01-26 (Phase 4 COMPLETE)
-Current: Phase 4 complete, ready for Phase 5
+Last session: 2026-01-26 (Phase 5 BLOCKED)
+Current: Phase 5 blocked on Classy API limitation, proceeding to Phase 6 or 7
 
 **Phase 4 Verification Results (2026-01-26):**
 

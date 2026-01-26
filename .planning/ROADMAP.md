@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
 - [x] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
 - [x] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
-- [ ] **Phase 5: Bulk Migration** - WP-CLI tool to create campaigns for existing funds
+- [ ] **Phase 5: Bulk Migration** - WP-CLI tool to create campaigns for existing funds ⚠️ BLOCKED
 - [ ] **Phase 6: Admin UI** - Display campaign data and sync controls in WordPress admin
 - [ ] **Phase 7: Frontend Embed Integration** - Replace legacy donation form with Classy embed on fund pages
 
@@ -125,7 +125,8 @@ Plans:
 **Goal**: All 758 existing funds without campaigns get campaigns created via WP-CLI
 **Depends on**: Phases 2-3 (requires sync operations validated)
 **Requirements**: MIGR-01, MIGR-02, MIGR-03, MIGR-04, MIGR-05
-**Plans:** 1 plan
+**Status**: ⚠️ BLOCKED — Awaiting Classy response
+**Plans:** 1 plan (ready but cannot execute)
 
 Plans:
 - [ ] 05-01-PLAN.md - Create WP-CLI migration command with batch processing
@@ -136,6 +137,18 @@ Plans:
   3. Migration can be resumed if interrupted (idempotent)
   4. Dry-run mode shows what would happen without making changes
   5. Migration logs success/failure for each fund
+
+**BLOCKER (2026-01-26):**
+Classy's public API `duplicateCampaign` and `publishCampaign` endpoints do not properly support Studio campaign types. API-created campaigns appear "Published" but:
+- Design tab: "Oops! Something went wrong"
+- Settings tab: "We can't seem to find that page"
+
+**Waiting on:** Classy support response for recommended path forward. Options include:
+1. Classy runs bulk duplications using internal Studio endpoints
+2. Provide fund list for Classy to batch-create campaigns
+3. Alternative campaign type that works with public API
+
+**Email sent:** 2026-01-26 to Luke Dringoli & Jon Bierma at GoFundMe Pro
 
 ### Phase 6: Admin UI
 **Goal**: Campaign data and sync status are visible in WordPress admin interface
@@ -177,6 +190,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Campaign Push Sync | 4/4 | Complete | 2026-01-26 |
 | 3. Campaign Status Management | 1/1 | Complete | 2026-01-26 |
 | 4. Inbound Sync | 1/1 | Complete | 2026-01-26 |
-| 5. Bulk Migration | 0/1 | Planned | - |
+| 5. Bulk Migration | 0/1 | ⚠️ Blocked | - |
 | 6. Admin UI | 0/0 | Not started | - |
 | 7. Frontend Embed Integration | 0/0 | Not started | - |

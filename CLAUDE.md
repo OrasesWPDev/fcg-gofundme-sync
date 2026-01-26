@@ -85,6 +85,33 @@ Enable `WP_DEBUG` to see sync operations logged to PHP error log with prefix `[F
 - **API:** Sandbox GoFundMe Pro credentials (set in WP Engine env vars)
 - **Purpose:** Primary development and testing environment for current phase
 
+## Deployment
+
+**WP Engine Constraints:**
+- **SCP is NOT supported** - WP Engine blocks SCP connections
+- **rsync IS supported** - Use rsync for all deployments
+- **SFTP available** - As fallback via FileZilla/Transmit or WP Engine File Manager
+
+**Deploy to Staging (rsync):**
+```bash
+rsync -avz --exclude='.git' --exclude='.planning' --exclude='*.zip' \
+  /Users/chadmacbook/projects/fcg/ \
+  frederickc2stg@frederickc2stg.ssh.wpengine.net:~/sites/frederickc2stg/wp-content/plugins/fcg-gofundme-sync/
+```
+
+**Deploy to Production (rsync):**
+```bash
+rsync -avz --exclude='.git' --exclude='.planning' --exclude='*.zip' \
+  /Users/chadmacbook/projects/fcg/ \
+  frederickcount@frederickcount.ssh.wpengine.net:~/sites/frederickcount/wp-content/plugins/fcg-gofundme-sync/
+```
+
+**Post-Deployment Cleanup:**
+Always remove any zip files from the project directory after deployment:
+```bash
+rm -f /Users/chadmacbook/projects/fcg/*.zip
+```
+
 ## Local Development Environment
 
 - **Path:** `/Users/chadmacbook/Local Sites/frederick-county-gives/app/public`

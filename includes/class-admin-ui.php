@@ -123,6 +123,8 @@ class FCG_GFM_Admin_UI {
      */
     public function render_sync_meta_box(WP_Post $post): void {
         $designation_id = get_post_meta($post->ID, '_gofundme_designation_id', true);
+        $campaign_id = get_post_meta($post->ID, '_gofundme_campaign_id', true);
+        $campaign_url = get_post_meta($post->ID, '_gofundme_campaign_url', true);
         $last_sync = get_post_meta($post->ID, '_gofundme_last_sync', true);
         $sync_source = get_post_meta($post->ID, '_gofundme_sync_source', true);
         $sync_error = get_post_meta($post->ID, '_gofundme_sync_error', true);
@@ -131,6 +133,17 @@ class FCG_GFM_Admin_UI {
         wp_nonce_field('fcg_gfm_sync_now', 'fcg_gfm_sync_nonce');
         ?>
         <div class="fcg-sync-meta-box">
+            <p>
+                <strong>Campaign ID:</strong><br>
+                <?php if ($campaign_id): ?>
+                    <a href="<?php echo esc_url($campaign_url ?: 'https://www.classy.org/admin/campaign/' . $campaign_id); ?>" target="_blank">
+                        <?php echo esc_html($campaign_id); ?> <span class="dashicons dashicons-external"></span>
+                    </a>
+                <?php else: ?>
+                    <em>Not linked</em>
+                <?php endif; ?>
+            </p>
+
             <p>
                 <strong>Designation ID:</strong><br>
                 <?php if ($designation_id): ?>

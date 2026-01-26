@@ -39,6 +39,31 @@ class FCG_GFM_Sync_Poller {
     private const MAX_RETRY_ATTEMPTS = 3;
 
     /**
+     * Meta key for donation total
+     */
+    private const META_DONATION_TOTAL = '_gofundme_donation_total';
+
+    /**
+     * Meta key for donor count
+     */
+    private const META_DONOR_COUNT = '_gofundme_donor_count';
+
+    /**
+     * Meta key for goal progress percentage
+     */
+    private const META_GOAL_PROGRESS = '_gofundme_goal_progress';
+
+    /**
+     * Meta key for campaign status
+     */
+    private const META_CAMPAIGN_STATUS = '_gofundme_campaign_status';
+
+    /**
+     * Meta key for last inbound sync timestamp
+     */
+    private const META_LAST_INBOUND_SYNC = '_gofundme_last_inbound_sync';
+
+    /**
      * API Client instance
      *
      * @var FCG_GFM_API_Client
@@ -162,7 +187,119 @@ class FCG_GFM_Sync_Poller {
             $stats['retried']
         ));
 
+        // Poll campaigns for donation data (Phase 4)
+        $this->poll_campaigns();
+
         $this->set_last_poll_time();
+    }
+
+    /**
+     * Poll campaigns for donation data
+     *
+     * Fetches donation totals, donor counts, and status from Classy
+     * and stores in WordPress post meta.
+     */
+    private function poll_campaigns(): void {
+        // Find all funds with campaign IDs
+        $funds_with_campaigns = get_posts([
+            'post_type' => 'funds',
+            'posts_per_page' => -1,
+            'post_status' => ['publish', 'draft', 'pending'],
+            'meta_query' => [
+                [
+                    'key' => '_gofundme_campaign_id',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ]);
+
+        if (empty($funds_with_campaigns)) {
+            $this->log("Campaign poll: No funds with campaigns found");
+            return;
+        }
+
+        $stats = [
+            'processed' => 0,
+            'updated' => 0,
+            'errors' => 0,
+        ];
+
+        foreach ($funds_with_campaigns as $post) {
+            $campaign_id = get_post_meta($post->ID, '_gofundme_campaign_id', true);
+            if (empty($campaign_id)) {
+                continue;
+            }
+
+            $stats['processed']++;
+
+            if ($this->sync_campaign_inbound($post->ID, $campaign_id)) {
+                $stats['updated']++;
+            } else {
+                $stats['errors']++;
+            }
+
+            // Small delay between API calls to avoid rate limiting
+            usleep(50000); // 50ms
+        }
+
+        $this->log(sprintf(
+            "Campaign poll complete: %d processed, %d updated, %d errors",
+            $stats['processed'],
+            $stats['updated'],
+            $stats['errors']
+        ));
+    }
+
+    /**
+     * Sync inbound campaign data for a single fund
+     *
+     * @param int $post_id WordPress post ID
+     * @param string $campaign_id Classy campaign ID
+     * @return bool True if sync successful
+     */
+    private function sync_campaign_inbound(int $post_id, string $campaign_id): bool {
+        $this->set_syncing_flag();
+
+        try {
+            // Fetch campaign data (for status and goal)
+            $campaign = $this->api->get_campaign($campaign_id);
+            if (!$campaign['success']) {
+                $this->log("Failed to fetch campaign {$campaign_id} for post {$post_id}: " . ($campaign['error'] ?? 'Unknown'));
+                return false;
+            }
+
+            // Fetch campaign overview (for donation totals)
+            $overview = $this->api->get_campaign_overview($campaign_id);
+            if (!$overview['success']) {
+                $this->log("Failed to fetch campaign overview {$campaign_id} for post {$post_id}: " . ($overview['error'] ?? 'Unknown'));
+                return false;
+            }
+
+            // Store campaign status
+            $status = $campaign['data']['status'] ?? '';
+            update_post_meta($post_id, self::META_CAMPAIGN_STATUS, $status);
+
+            // Store donation total (API returns string, cast to float)
+            $total = floatval($overview['data']['total_gross_amount'] ?? 0);
+            update_post_meta($post_id, self::META_DONATION_TOTAL, $total);
+
+            // Store donor count
+            $donor_count = intval($overview['data']['donors_count'] ?? 0);
+            update_post_meta($post_id, self::META_DONOR_COUNT, $donor_count);
+
+            // Calculate and store goal progress percentage
+            $goal = floatval($campaign['data']['goal'] ?? 0);
+            $progress = ($goal > 0) ? round(($total / $goal) * 100, 1) : 0.0;
+            update_post_meta($post_id, self::META_GOAL_PROGRESS, $progress);
+
+            // Update inbound sync timestamp
+            update_post_meta($post_id, self::META_LAST_INBOUND_SYNC, current_time('mysql'));
+
+            return true;
+
+        } finally {
+            $this->clear_syncing_flag();
+        }
     }
 
     /**

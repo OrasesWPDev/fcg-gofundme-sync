@@ -104,6 +104,11 @@ Plans:
 **Goal**: Donation totals and campaign status automatically sync from Classy to WordPress
 **Depends on**: Phase 2 (requires campaigns to exist)
 **Requirements**: SYNC-01, SYNC-02, SYNC-03, SYNC-04
+**Plans:** 1 plan
+
+Plans:
+- [ ] 04-01-PLAN.md - Add campaign overview API method and extend sync poller
+
 **Success Criteria** (what must be TRUE):
   1. Donation totals are fetched from Classy every 15 minutes
   2. Campaign status (active/unpublished/deactivated) is fetched and reflected in post meta
@@ -115,11 +120,6 @@ Plans:
 - Enable "Alternate Cron" in WP Engine dashboard (replaces wp-cron with reliable server cron)
 - Staging: Already configured (Alternate Cron enabled)
 - Production: Will need same toggle enabled before go-live
-
-**Plans**: TBD
-
-Plans:
-- [ ] TBD (will be created during plan-phase)
 
 ### Phase 5: Bulk Migration
 **Goal**: All 758 existing funds without campaigns get campaigns created via WP-CLI
@@ -175,7 +175,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Configuration | 3/3 | Complete | 2026-01-23 |
 | 2. Campaign Push Sync | 4/4 | Complete | 2026-01-26 |
 | 3. Campaign Status Management | 1/1 | Complete | 2026-01-26 |
-| 4. Inbound Sync | 0/0 | Not started | - |
+| 4. Inbound Sync | 0/1 | Planned | - |
 | 5. Bulk Migration | 0/0 | Not started | - |
 | 6. Admin UI | 0/0 | Not started | - |
 | 7. Frontend Embed Integration | 0/0 | Not started | - |

@@ -3,7 +3,7 @@
  * Plugin Name: FCG GoFundMe Pro Sync
  * Plugin URI: https://orases.com
  * Description: Syncs WordPress funds with GoFundMe Pro designations via API. Creates, updates, and deletes designations automatically when funds are modified.
- * Version: 2.1.5
+ * Version: 2.1.6
  * Author: Orases
  * Author URI: https://orases.com
  * License: GPL v2 or later
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('FCG_GFM_SYNC_VERSION', '2.1.5');
+define('FCG_GFM_SYNC_VERSION', '2.1.6');
 define('FCG_GFM_SYNC_PATH', plugin_dir_path(__FILE__));
 define('FCG_GFM_SYNC_URL', plugin_dir_url(__FILE__));
 

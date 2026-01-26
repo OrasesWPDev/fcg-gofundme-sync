@@ -124,21 +124,28 @@ class FCG_GFM_Admin_UI {
     public function render_sync_meta_box(WP_Post $post): void {
         $designation_id = get_post_meta($post->ID, '_gofundme_designation_id', true);
         $campaign_id = get_post_meta($post->ID, '_gofundme_campaign_id', true);
-        $campaign_url = get_post_meta($post->ID, '_gofundme_campaign_url', true);
         $last_sync = get_post_meta($post->ID, '_gofundme_last_sync', true);
         $sync_source = get_post_meta($post->ID, '_gofundme_sync_source', true);
         $sync_error = get_post_meta($post->ID, '_gofundme_sync_error', true);
         $fundraising_goal = get_post_meta($post->ID, '_gofundme_fundraising_goal', true);
+
+        // Get org ID for admin URLs
+        $org_id = getenv('GOFUNDME_ORG_ID');
+        if (!$org_id && defined('GOFUNDME_ORG_ID')) {
+            $org_id = GOFUNDME_ORG_ID;
+        }
 
         wp_nonce_field('fcg_gfm_sync_now', 'fcg_gfm_sync_nonce');
         ?>
         <div class="fcg-sync-meta-box">
             <p>
                 <strong>Campaign ID:</strong><br>
-                <?php if ($campaign_id): ?>
-                    <a href="<?php echo esc_url($campaign_url ?: 'https://www.classy.org/admin/campaign/' . $campaign_id); ?>" target="_blank">
+                <?php if ($campaign_id && $org_id): ?>
+                    <a href="https://www.classy.org/admin/<?php echo esc_attr($org_id); ?>/campaigns/<?php echo esc_attr($campaign_id); ?>" target="_blank">
                         <?php echo esc_html($campaign_id); ?> <span class="dashicons dashicons-external"></span>
                     </a>
+                <?php elseif ($campaign_id): ?>
+                    <?php echo esc_html($campaign_id); ?> <em>(org ID not configured)</em>
                 <?php else: ?>
                     <em>Not linked</em>
                 <?php endif; ?>
@@ -146,10 +153,12 @@ class FCG_GFM_Admin_UI {
 
             <p>
                 <strong>Designation ID:</strong><br>
-                <?php if ($designation_id): ?>
-                    <a href="https://www.classy.org/admin/designations/<?php echo esc_attr($designation_id); ?>" target="_blank">
+                <?php if ($designation_id && $org_id): ?>
+                    <a href="https://www.classy.org/admin/<?php echo esc_attr($org_id); ?>/settings/designations/<?php echo esc_attr($designation_id); ?>" target="_blank">
                         <?php echo esc_html($designation_id); ?> <span class="dashicons dashicons-external"></span>
                     </a>
+                <?php elseif ($designation_id): ?>
+                    <?php echo esc_html($designation_id); ?> <em>(org ID not configured)</em>
                 <?php else: ?>
                     <em>Not linked</em>
                 <?php endif; ?>

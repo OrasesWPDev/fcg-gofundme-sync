@@ -4,11 +4,11 @@
 
 **Status:** Complete
 **Date:** 2026-01-26
-**Duration:** ~20 minutes
+**Final Version:** 2.1.6
 
 ## What Was Built
 
-Fixed the bug where setting a fund to draft incorrectly deactivated the campaign instead of unpublishing it.
+Fixed the bug where setting a fund to draft incorrectly deactivated the campaign instead of unpublishing it. Also added Campaign ID display to admin meta box (user feedback) and corrected Classy admin URLs.
 
 ### Changes Made
 
@@ -17,9 +17,14 @@ Fixed the bug where setting a fund to draft incorrectly deactivated the campaign
    - Removed catch-all else clause that caused double deactivation on trash
    - Trash/delete now handled exclusively by their dedicated hooks
 
-2. **fcg-gofundme-sync.php** - Version bump to 2.1.4
+2. **class-admin-ui.php** - Enhanced meta box:
+   - Added Campaign ID display (above Designation ID)
+   - Fixed admin URLs to use correct Classy format: `/admin/{org_id}/campaigns/{id}` and `/admin/{org_id}/settings/designations/{id}`
+   - Gets org_id from GOFUNDME_ORG_ID env var/constant
 
-3. **CLAUDE.md** - Added Deployment section documenting:
+3. **fcg-gofundme-sync.php** - Version bumps: 2.1.4 → 2.1.5 → 2.1.6
+
+4. **CLAUDE.md** - Added Deployment section documenting:
    - WP Engine rsync deployment method (SCP not supported)
    - Commands for staging and production deployment
    - Post-deployment cleanup instructions
@@ -30,6 +35,8 @@ Fixed the bug where setting a fund to draft incorrectly deactivated the campaign
 |------|---------|-------|
 | 57c903d | fix(03-01): correct draft status to unpublish (not deactivate) campaign | includes/class-sync-handler.php, fcg-gofundme-sync.php |
 | f99e6cb | docs(03-01): document rsync deployment method for WP Engine | CLAUDE.md |
+| bf8e161 | feat(03): add Campaign ID to admin meta box | includes/class-admin-ui.php, fcg-gofundme-sync.php |
+| fb75425 | fix(03): correct Classy admin URLs in meta box | includes/class-admin-ui.php, fcg-gofundme-sync.php |
 
 ## Verification
 
@@ -71,4 +78,4 @@ None - plan executed as specified.
 
 ## Next Steps
 
-Gap closure plan 03-02 created to add Campaign ID to admin meta box (user feedback).
+Phase 3 complete. Ready for Phase 4 (Inbound Sync).

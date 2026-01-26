@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 Phase: 3 of 7 (Campaign Status Management) - COMPLETE
 Plan: 1 of 1 complete in current phase
 Status: Phase 3 complete, all requirements verified
-Last activity: 2026-01-26 — Draft→unpublish fix deployed, Campaign ID added to meta box
+Last activity: 2026-01-26 — Draft→unpublish fix, Campaign ID in meta box, admin URL fix
 
 Progress: [███████░░░] 70%
 
@@ -69,6 +69,7 @@ Recent decisions affecting current work:
 **RESOLVED - All Phase 3 issues fixed:**
 - ~~Draft status calling deactivate instead of unpublish~~ - Fixed in v2.1.4
 - ~~Campaign ID not visible in admin~~ - Added in v2.1.5
+- ~~Admin URLs pointing to wrong Classy pages~~ - Fixed in v2.1.6
 
 **Environment concerns:**
 - WP Engine staging SSH timeout (2026-01-23) - connection intermittent, use rsync (not scp)
@@ -98,6 +99,6 @@ Current: Phase 3 complete, ready for Phase 4
 - Campaign 763426: Updated_E2E_Fresh_Test (used for all status tests)
 - Fund 13771: Test fund for status transitions
 
-**Plugin version:** 2.1.5 (deployed to staging)
+**Plugin version:** 2.1.6 (deployed to staging)
 
 Resume file: None

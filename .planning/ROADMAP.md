@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Configuration** - Add template campaign setting and fundraising goal field
 - [x] **Phase 2: Campaign Push Sync** - Create and update campaigns via duplication when funds publish/update
-- [ ] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
+- [x] **Phase 3: Campaign Status Management** - Sync campaign status with WordPress post status transitions
 - [ ] **Phase 4: Inbound Sync** - Poll donation totals and campaign status from Classy
 - [ ] **Phase 5: Bulk Migration** - WP-CLI tool to create campaigns for existing funds
 - [ ] **Phase 6: Admin UI** - Display campaign data and sync controls in WordPress admin
@@ -86,15 +86,19 @@ Plans:
 **Goal**: Campaign publish/unpublish status stays synchronized with WordPress post status
 **Depends on**: Phase 2 (requires campaign creation working)
 **Requirements**: STAT-01, STAT-02, STAT-03
+**Plans:** 1 plan
+
+Plans:
+- [x] 03-01-PLAN.md - Fix draft status to call unpublish_campaign() instead of deactivate
+
 **Success Criteria** (what must be TRUE):
   1. When fund is set to draft, campaign is unpublished (not deactivated)
   2. When fund is republished from draft, campaign returns to active status
   3. Campaign status correctly maps: publish->active, draft->unpublished, trash->deactivated
   4. Two-step restore works: reactivate then publish
-**Plans**: TBD
 
-Plans:
-- [ ] TBD (will be created during plan-phase)
+**Bonus (user feedback):**
+  - Campaign ID now displayed in admin meta box (delivered early from Phase 6)
 
 ### Phase 4: Inbound Sync
 **Goal**: Donation totals and campaign status automatically sync from Classy to WordPress
@@ -170,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Configuration | 3/3 | Complete | 2026-01-23 |
 | 2. Campaign Push Sync | 4/4 | Complete | 2026-01-26 |
-| 3. Campaign Status Management | 0/0 | Not started | - |
+| 3. Campaign Status Management | 1/1 | Complete | 2026-01-26 |
 | 4. Inbound Sync | 0/0 | Not started | - |
 | 5. Bulk Migration | 0/0 | Not started | - |
 | 6. Admin UI | 0/0 | Not started | - |

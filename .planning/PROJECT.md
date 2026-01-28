@@ -2,11 +2,11 @@
 
 ## What This Is
 
-A WordPress plugin that synchronizes the "funds" custom post type with GoFundMe Pro (Classy) designations and campaigns via their API. When a client adds or updates a fund in WordPress, it automatically creates/updates both a designation and a campaign in Classy. The plugin also polls Classy for donation data and syncs it back to WordPress.
+A WordPress plugin that synchronizes the "funds" custom post type with GoFundMe Pro (Classy) designations via their API. When a client adds or updates a fund in WordPress, it automatically creates/updates a designation in Classy and links it to a single master campaign. The plugin also polls Classy for donation data and syncs it back to WordPress.
 
 ## Core Value
 
-When a fund is published in WordPress, both the designation AND campaign are automatically created in Classy with correct settings — no manual data entry in Classy required.
+When a fund is published in WordPress, the designation is automatically created in Classy and linked to the master campaign — no manual data entry required.
 
 ## Requirements
 
@@ -30,26 +30,25 @@ These capabilities already work in the current codebase:
 
 ### Active
 
-New capabilities to build:
+New capabilities to build (post-architecture pivot):
 
-- [ ] Campaign creation via template duplication when fund published
-- [ ] Campaign update when fund updated (name, goal, overview)
-- [ ] Campaign deactivate/reactivate on trash/untrash
-- [ ] Inbound sync: pull donation totals from Classy
-- [ ] Inbound sync: pull campaign status from Classy
-- [ ] Inbound sync: pull goal progress from Classy
-- [ ] fundraising_goal ACF field on funds
-- [ ] Template campaign ID plugin setting
-- [ ] Bulk migration tool for existing funds without campaigns
-- [ ] Campaign URL storage and display in admin
+- [x] Inbound sync: pull donation totals from Classy *(Phase 4 complete)*
+- [x] Inbound sync: pull campaign status from Classy *(Phase 4 complete)*
+- [x] Inbound sync: pull goal progress from Classy *(Phase 4 complete)*
+- [x] fundraising_goal ACF field on funds *(Phase 1 complete)*
+- [x] Template campaign ID plugin setting *(Phase 1 complete)*
+- [ ] Code cleanup: remove obsolete campaign sync code *(Phase 5)*
+- [ ] Master campaign settings: rename setting, add component ID *(Phase 6)*
+- [ ] Link designations to master campaign via API *(Phase 6)*
+- [ ] Frontend embed with `?designation={id}` parameter *(Phase 7)*
+- [ ] Admin UI: designation ID, donation totals display *(Phase 8, optional)*
 
 ### Out of Scope
 
-- Direct campaign creation via API — Classy doesn't support public endpoint
 - Real-time webhooks — Classy doesn't offer webhook integration
-- Multiple campaigns per fund — 1:1 relationship only
 - Donation-level sync — Only totals, not individual transactions
-- Campaign deletion — Only deactivation (preserves donation history)
+- Multiple designations per fund — 1:1 relationship only
+- Per-fund campaigns — Architecture pivot moved to single master campaign
 
 ## Context
 
@@ -60,15 +59,15 @@ New capabilities to build:
 - ACF for custom fields
 - WP-CLI available for operations
 
-**API Constraints:**
-- `POST /organizations/{org_id}/campaigns` is NOT a public endpoint
-- Must use `duplicateCampaign` endpoint to create campaigns from template
-- `publishCampaign` endpoint to make campaigns live
-- Awaiting confirmation from Classy contact on what fields can be updated post-duplication
+**Architecture (as of 2026-01-28):**
+- Single master campaign with all designations
+- `?designation={id}` URL parameter pre-selects fund in embed
+- `PUT /campaigns/{id}` with `{"designation_id": "{id}"}` links designation to campaign
+- Frontend embeds master campaign with designation parameter
 
 **Existing Data:**
-- ~758 funds in WordPress, all with designations
-- None have campaigns yet — bulk migration needed
+- ~861 funds in WordPress, all with designations
+- Master campaign to be created manually in Classy UI
 
 **Staging Environment:**
 - SSH: `frederickc2stg@frederickc2stg.ssh.wpengine.net`
@@ -76,8 +75,7 @@ New capabilities to build:
 
 ## Constraints
 
-- **API**: Must use campaign duplication, not direct creation
-- **Pre-requisite**: Template campaign must exist in Classy before plugin can create campaigns
+- **Pre-requisite**: Master campaign must exist in Classy before Phase 6
 - **ACF**: Requires ACF plugin for fundraising_goal field
 - **WP Engine**: Environment variables for credentials (no hardcoded secrets)
 
@@ -85,11 +83,10 @@ New capabilities to build:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Campaign duplication approach | Classy doesn't expose direct campaign creation publicly | — Pending (awaiting Classy confirmation on updatable fields) |
-| 1:1 fund-to-campaign relationship | Simplest model, matches business need | — Pending |
+| Single master campaign | Classy confirmed `?designation={id}` works with embeds | ✓ Architecture pivot 2026-01-28 |
 | WordPress wins on conflicts | Existing pattern, client is source of truth | ✓ Good |
-| Scheduled inbound sync (15 min) | Balances freshness with API rate limits | — Pending |
-| Bulk migration tool | 758 existing funds need campaigns | — Pending |
+| Scheduled inbound sync (15 min) | Balances freshness with API rate limits | ✓ Phase 4 complete |
+| Code cleanup before new features | Remove obsolete campaign code for clean codebase | ✓ Phase 5 queued |
 
 ---
-*Last updated: 2026-01-22 after initialization*
+*Last updated: 2026-01-28 after architecture pivot*

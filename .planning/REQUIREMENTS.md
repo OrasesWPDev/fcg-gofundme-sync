@@ -1,31 +1,32 @@
 # Requirements: FCG GoFundMe Pro Sync
 
 **Defined:** 2026-01-22
-**Core Value:** When a fund is published in WordPress, both the designation AND campaign are automatically created in Classy with correct settings — no manual data entry required.
+**Updated:** 2026-01-28 (architecture pivot)
+**Core Value:** When a fund is published in WordPress, the designation is automatically created in Classy and linked to the master campaign — no manual data entry required.
 
 ## v1 Requirements
 
-Requirements for bi-directional sync with campaign support. Each maps to roadmap phases.
+Requirements for single master campaign architecture. Each maps to roadmap phases.
 
 ### Configuration
 
 - [x] **CONF-01**: Admin can configure template campaign ID for duplication
 - [x] **CONF-02**: fundraising_goal ACF field added to funds
 
-### Campaign Push Sync (Outbound)
+### Code Cleanup (Post-Pivot)
 
-- [x] **CAMP-01**: When fund is published, campaign is created via template duplication
-- [x] **CAMP-02**: When fund is updated, campaign name and goal are updated
-- [x] **CAMP-03**: When fund is trashed, campaign is deactivated
-- [x] **CAMP-04**: When fund is restored from trash, campaign is reactivated and published
-- [x] **CAMP-05**: Campaign ID is stored in `_gofundme_campaign_id` post meta
-- [x] **CAMP-06**: Campaign URL is stored in `_gofundme_campaign_url` post meta
+- [ ] **CLEAN-01**: Remove obsolete campaign sync methods from sync handler
+- [ ] **CLEAN-02**: Remove campaign-related constants and post meta logic
+- [ ] **CLEAN-03**: Remove unused API client campaign lifecycle methods
+- [ ] **CLEAN-04**: Update CLAUDE.md to reflect new architecture
+- [ ] **CLEAN-05**: Bump plugin version to mark architecture change
 
-### Campaign Status Management
+### Master Campaign Integration
 
-- [x] **STAT-01**: When fund is unpublished (draft), campaign is unpublished
-- [x] **STAT-02**: When fund is republished, campaign is published
-- [x] **STAT-03**: Campaign status maps correctly: publish→active, draft→unpublished, trash→deactivated
+- [ ] **MASTER-01**: Rename "Template Campaign ID" setting to "Master Campaign ID"
+- [ ] **MASTER-02**: Add "Master Component ID" setting for embed code
+- [ ] **MASTER-03**: After designation creation, link to master campaign via API
+- [ ] **MASTER-04**: New designations appear in master campaign dropdown
 
 ### Inbound Sync (Classy → WordPress)
 
@@ -34,27 +35,19 @@ Requirements for bi-directional sync with campaign support. Each maps to roadmap
 - [x] **SYNC-03**: Goal progress percentage is calculated and stored
 - [x] **SYNC-04**: Post meta updated with donation data without triggering outbound sync
 
-### Bulk Migration
+### Admin UI (Optional)
 
-- [ ] **MIGR-01**: WP-CLI command creates campaigns for existing funds without campaigns
-- [ ] **MIGR-02**: Migration runs in batches (50 funds per batch) to avoid timeout
-- [ ] **MIGR-03**: Migration is resume-able (only processes funds without campaign_id)
-- [ ] **MIGR-04**: Migration includes dry-run mode for testing
-- [ ] **MIGR-05**: Migration logs successes and failures
-
-### Admin UI
-
-- [ ] **ADMN-01**: Campaign URL displayed in fund edit meta box
-- [ ] **ADMN-02**: Donation total displayed in fund edit meta box
+- [ ] **ADMN-01**: Designation ID displayed in fund edit meta box
+- [ ] **ADMN-02**: Donation total displayed in fund edit meta box (from inbound sync)
 - [ ] **ADMN-03**: Last sync timestamp displayed
 - [ ] **ADMN-04**: Manual "Sync Now" button for individual fund
 
 ### Frontend Embed Integration
 
 - [ ] **EMBD-01**: Fund single template displays Classy donation embed
-- [ ] **EMBD-02**: Embed dynamically uses campaign ID from fund post meta
+- [ ] **EMBD-02**: Embed uses master campaign with `?designation={id}` parameter
 - [ ] **EMBD-03**: Legacy donation form replaced/removed
-- [ ] **EMBD-04**: Graceful fallback when campaign ID not present
+- [ ] **EMBD-04**: Graceful fallback when designation ID not present
 
 ## v2 Requirements
 
@@ -78,53 +71,59 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| Direct campaign creation (POST /campaigns) | Returns 403 — not a public endpoint |
-| Campaign deletion | Destroys donation history — use deactivate instead |
-| Multiple campaigns per fund | 1:1 relationship by design |
+| Per-fund campaigns | Architecture pivot moved to single master campaign |
 | Real-time webhooks | Classy doesn't offer webhook integration |
 | Individual donation records | Only totals needed for current use case |
 | Local development environment | All testing on WP Engine staging |
+| Multiple designations per fund | 1:1 relationship by design |
+
+## Archived Requirements (Pre-Pivot)
+
+The following requirements were completed but made obsolete by the architecture pivot (2026-01-28):
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| CAMP-01 through CAMP-06 | Archived | Per-fund campaign creation removed |
+| STAT-01 through STAT-03 | Archived | Campaign status management removed |
+| MIGR-01 through MIGR-05 | Archived | Bulk migration no longer needed |
+
+Code implementing these requirements will be removed in Phase 5 (Code Cleanup).
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+Which phases cover which requirements. Updated after architecture pivot.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CONF-01 | Phase 1 | Complete |
 | CONF-02 | Phase 1 | Complete |
-| CAMP-01 | Phase 2 | Complete |
-| CAMP-02 | Phase 2 | Complete |
-| CAMP-03 | Phase 2 | Complete |
-| CAMP-04 | Phase 2 | Complete |
-| CAMP-05 | Phase 2 | Complete |
-| CAMP-06 | Phase 2 | Complete |
-| STAT-01 | Phase 3 | Complete |
-| STAT-02 | Phase 3 | Complete |
-| STAT-03 | Phase 3 | Complete |
 | SYNC-01 | Phase 4 | Complete |
 | SYNC-02 | Phase 4 | Complete |
 | SYNC-03 | Phase 4 | Complete |
 | SYNC-04 | Phase 4 | Complete |
-| MIGR-01 | Phase 5 | Pending |
-| MIGR-02 | Phase 5 | Pending |
-| MIGR-03 | Phase 5 | Pending |
-| MIGR-04 | Phase 5 | Pending |
-| MIGR-05 | Phase 5 | Pending |
-| ADMN-01 | Phase 6 | Pending |
-| ADMN-02 | Phase 6 | Pending |
-| ADMN-03 | Phase 6 | Pending |
-| ADMN-04 | Phase 6 | Pending |
+| CLEAN-01 | Phase 5 | Pending |
+| CLEAN-02 | Phase 5 | Pending |
+| CLEAN-03 | Phase 5 | Pending |
+| CLEAN-04 | Phase 5 | Pending |
+| CLEAN-05 | Phase 5 | Pending |
+| MASTER-01 | Phase 6 | Pending |
+| MASTER-02 | Phase 6 | Pending |
+| MASTER-03 | Phase 6 | Pending |
+| MASTER-04 | Phase 6 | Pending |
 | EMBD-01 | Phase 7 | Pending |
 | EMBD-02 | Phase 7 | Pending |
 | EMBD-03 | Phase 7 | Pending |
 | EMBD-04 | Phase 7 | Pending |
+| ADMN-01 | Phase 8 | Pending |
+| ADMN-02 | Phase 8 | Pending |
+| ADMN-03 | Phase 8 | Pending |
+| ADMN-04 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 28 total
-- Mapped to phases: 28
+- v1 requirements: 23 total (post-pivot)
+- Mapped to phases: 23
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-26 after Phase 4 completion*
+*Last updated: 2026-01-28 after architecture pivot*

@@ -46,6 +46,25 @@ Plugin reads credentials from environment variables (recommended) or wp-config.p
 
 **Priority:** Environment variables take precedence over wp-config.php constants
 
+## Architecture (v2.3.0+)
+
+**Single Master Campaign Model:**
+- One master campaign in Classy contains all designations
+- Each WordPress fund maps to one Classy designation
+- Designations are linked to the master campaign via `PUT /campaigns/{id}` with `{"designation_id": "{id}"}`
+- Frontend embeds use `?designation={id}` parameter to pre-select the correct fund
+
+**Plugin flow:**
+1. Fund published in WordPress
+2. Plugin creates designation via Classy API
+3. Plugin links designation to master campaign (Phase 6)
+4. Frontend embed uses `?designation={id}` to show correct fund
+
+**Removed in v2.3.0:**
+- Per-fund campaign duplication
+- Campaign publish/unpublish/deactivate/reactivate workflow
+- Campaign status synchronization
+
 ## Requirements
 
 - PHP 7.4+
@@ -54,19 +73,35 @@ Plugin reads credentials from environment variables (recommended) or wp-config.p
 
 ## Post Meta Keys
 
-- `_gofundme_designation_id`: Stores the Classy designation ID
+**Active (designation sync):**
+- `_gofundme_designation_id`: Classy designation ID
 - `_gofundme_last_sync`: Timestamp of last successful sync
+
+**Inbound sync (donation totals):**
+- `_gofundme_donation_total`: Total donations for fund
+- `_gofundme_donor_count`: Number of donors
+- `_gofundme_goal_progress`: Percentage of goal reached
+- `_gofundme_last_inbound_sync`: Timestamp of last inbound sync
+
+**Legacy (orphaned after v2.3.0):**
+- `_gofundme_campaign_id`: Per-fund campaign ID (no longer used)
+- `_gofundme_campaign_url`: Per-fund campaign URL (no longer used)
+- `_gofundme_campaign_status`: Per-fund campaign status (no longer used)
+
+Legacy meta can be cleaned up with WP-CLI if needed.
 
 ## Sync Behavior
 
 | WordPress Action | API Action |
 |-----------------|------------|
-| Publish fund | Create designation |
+| Publish fund | Create designation, link to master campaign |
 | Update fund | Update designation |
-| Unpublish/Draft | Set `is_active = false` |
-| Trash | Set `is_active = false` |
-| Restore from trash | Set `is_active = true` |
+| Unpublish/Draft | Set designation `is_active = false` |
+| Trash | Set designation `is_active = false` |
+| Restore from trash | Set designation `is_active = true` |
 | Permanent delete | Delete designation |
+
+**Note:** Campaign duplication was removed in v2.3.0. Designations are now linked to a single master campaign configured in plugin settings.
 
 ## Debugging
 

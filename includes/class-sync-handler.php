@@ -29,16 +29,6 @@ class FCG_GFM_Sync_Handler {
     private const META_KEY_LAST_SYNC = '_gofundme_last_sync';
 
     /**
-     * Meta key for GoFundMe Pro Campaign ID
-     */
-    private const META_CAMPAIGN_ID = '_gofundme_campaign_id';
-
-    /**
-     * Meta key for GoFundMe Pro Campaign URL
-     */
-    private const META_CAMPAIGN_URL = '_gofundme_campaign_url';
-
-    /**
      * ACF field group key
      */
     private const ACF_GROUP_KEY = 'gofundme_settings';
@@ -129,9 +119,6 @@ class FCG_GFM_Sync_Handler {
                 $this->create_designation($post_id, $designation_data);
             }
         }
-
-        // Sync campaign (parallel to designation)
-        $this->sync_campaign_to_gofundme($post_id, $post);
     }
     
     /**
@@ -159,15 +146,6 @@ class FCG_GFM_Sync_Handler {
 
         if ($result['success']) {
             $this->log_info("Deactivated designation {$designation_id} for trashed post {$post_id}");
-        }
-
-        // Deactivate campaign
-        $campaign_id = $this->get_campaign_id($post_id);
-        if ($campaign_id) {
-            $result = $this->api->deactivate_campaign($campaign_id);
-            if ($result['success']) {
-                $this->log_info("Deactivated campaign {$campaign_id} for trashed post {$post_id}");
-            }
         }
     }
     
@@ -197,35 +175,6 @@ class FCG_GFM_Sync_Handler {
         if ($result['success']) {
             $this->log_info("Reactivated designation {$designation_id} for restored post {$post_id}");
         }
-
-        // Reactivate and publish campaign
-        $campaign_id = $this->get_campaign_id($post_id);
-        if ($campaign_id && $this->should_sync_campaign($post_id)) {
-            // Step 1: Reactivate (returns campaign to unpublished status)
-            $reactivate_result = $this->api->reactivate_campaign($campaign_id);
-            if (!$reactivate_result['success']) {
-                $this->log_error("Failed to reactivate campaign {$campaign_id}: " . ($reactivate_result['error'] ?? 'Unknown error'));
-                return;
-            }
-            $this->log_info("Reactivated campaign {$campaign_id} for restored post {$post_id}");
-
-            // Step 2: Publish (makes campaign active again)
-            $publish_result = $this->api->publish_campaign($campaign_id);
-            if (!$publish_result['success']) {
-                $this->log_error("Failed to publish campaign {$campaign_id} after reactivation: " . ($publish_result['error'] ?? 'Unknown error'));
-                // Campaign is reactivated but unpublished - not ideal but recoverable
-            } else {
-                $this->log_info("Published campaign {$campaign_id} for restored post {$post_id}");
-            }
-
-            // Step 3: Update campaign data (name, goal, overview may have changed)
-            $campaign_data = $this->build_campaign_data($post);
-            $update_result = $this->api->update_campaign($campaign_id, $campaign_data);
-            if ($update_result['success']) {
-                update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
-                $this->log_info("Updated campaign {$campaign_id} data for restored post {$post_id}");
-            }
-        }
     }
 
     /**
@@ -251,15 +200,6 @@ class FCG_GFM_Sync_Handler {
 
         if ($result['success']) {
             $this->log_info("Deleted designation {$designation_id} for deleted post {$post_id}");
-        }
-
-        // Deactivate campaign (preserve donation history - do NOT delete)
-        $campaign_id = $this->get_campaign_id($post_id);
-        if ($campaign_id) {
-            $result = $this->api->deactivate_campaign($campaign_id);
-            if ($result['success']) {
-                $this->log_info("Deactivated campaign {$campaign_id} for deleted post {$post_id}");
-            }
         }
     }
     
@@ -298,87 +238,6 @@ class FCG_GFM_Sync_Handler {
             $status_text = $is_active ? 'activated' : 'deactivated';
             $this->log_info("Status change: {$status_text} designation {$designation_id} for post {$post->ID} ({$old_status} → {$new_status})");
         }
-
-        // Update campaign based on publish status
-        $campaign_id = $this->get_campaign_id($post->ID);
-        if ($campaign_id && $this->should_sync_campaign($post->ID)) {
-            if ($is_active) {
-                // Ensure campaign is active (handles deactivated campaigns)
-                if ($this->ensure_campaign_active($campaign_id, $post->ID)) {
-                    // Update with latest data
-                    $campaign_data = $this->build_campaign_data($post);
-                    $campaign_result = $this->api->update_campaign($campaign_id, $campaign_data);
-                    if ($campaign_result['success']) {
-                        update_post_meta($post->ID, self::META_KEY_LAST_SYNC, current_time('mysql'));
-                        $this->log_info("Status change: activated and updated campaign {$campaign_id} for post {$post->ID}");
-                    }
-                }
-            } elseif ($new_status === 'draft') {
-                // STAT-01: Unpublish campaign when fund is set to draft
-                // Note: Unpublish is reversible with a single publish call
-                // Deactivate (used for trash) requires reactivate+publish
-                $campaign_result = $this->api->unpublish_campaign($campaign_id);
-                if ($campaign_result['success']) {
-                    $this->log_info("Status change: unpublished campaign {$campaign_id} for post {$post->ID}");
-                } else {
-                    $this->log_error("Failed to unpublish campaign {$campaign_id}: " . ($campaign_result['error'] ?? 'Unknown error'));
-                }
-            }
-            // NO else clause here - trash is handled by on_trash_fund(), delete by on_delete_fund()
-            // Keeping an else would cause double deactivation (on_status_change + on_trash_fund)
-        }
-    }
-
-    /**
-     * Ensure campaign is in active status
-     *
-     * Handles the case where a campaign is deactivated and needs to be
-     * reactivated then published. This is a two-step process in Classy API.
-     *
-     * @param int|string $campaign_id Campaign ID
-     * @param int $post_id WordPress post ID (for logging)
-     * @return bool True if campaign is now active
-     */
-    private function ensure_campaign_active($campaign_id, int $post_id): bool {
-        // Check current campaign status
-        $result = $this->api->get_campaign($campaign_id);
-        if (!$result['success']) {
-            // Campaign doesn't exist - clear stale meta
-            if (($result['http_code'] ?? 0) === 404) {
-                $this->log_error("Campaign {$campaign_id} not found (404) for post {$post_id} - clearing stale meta");
-                delete_post_meta($post_id, self::META_CAMPAIGN_ID);
-                delete_post_meta($post_id, self::META_CAMPAIGN_URL);
-            } else {
-                $this->log_error("Failed to get campaign {$campaign_id} status: " . ($result['error'] ?? 'Unknown'));
-            }
-            return false;
-        }
-
-        $status = $result['data']['status'] ?? '';
-
-        if ($status === 'active') {
-            return true; // Already active
-        }
-
-        // If deactivated, need to reactivate first
-        if ($status === 'deactivated') {
-            $reactivate = $this->api->reactivate_campaign($campaign_id);
-            if (!$reactivate['success']) {
-                $this->log_error("Failed to reactivate campaign {$campaign_id}: " . ($reactivate['error'] ?? 'Unknown'));
-                return false;
-            }
-            $this->log_info("Reactivated deactivated campaign {$campaign_id} for post {$post_id}");
-        }
-
-        // Now publish (works for unpublished or just-reactivated)
-        $publish = $this->api->publish_campaign($campaign_id);
-        if (!$publish['success']) {
-            $this->log_error("Failed to publish campaign {$campaign_id}: " . ($publish['error'] ?? 'Unknown'));
-            return false;
-        }
-        $this->log_info("Published campaign {$campaign_id} for post {$post_id}");
-
-        return true;
     }
     
     /**
@@ -415,227 +274,6 @@ class FCG_GFM_Sync_Handler {
         }
         
         return $data;
-    }
-
-    /**
-     * Build campaign data from WordPress post
-     *
-     * @param WP_Post $post Post object
-     * @return array Campaign data for API
-     */
-    private function build_campaign_data(WP_Post $post): array {
-        $data = [
-            'name'                  => $this->truncate_string($post->post_title, 127),
-            'type'                  => 'crowdfunding',
-            'goal'                  => $this->get_fund_goal($post->ID),
-            'started_at'            => $post->post_date,
-            'timezone_identifier'   => 'America/New_York',
-            'external_reference_id' => (string) $post->ID,
-        ];
-
-        if (!empty($post->post_content)) {
-            $data['overview'] = $this->truncate_string(
-                wp_strip_all_tags($post->post_content),
-                2000
-            );
-        } elseif (!empty($post->post_excerpt)) {
-            $data['overview'] = $post->post_excerpt;
-        }
-
-        return $data;
-    }
-
-    /**
-     * Get fundraising goal for a fund
-     *
-     * @param int $post_id Post ID
-     * @return float Goal amount (default 1000)
-     */
-    private function get_fund_goal(int $post_id): float {
-        if (function_exists('get_field')) {
-            $gfm_settings = get_field(self::ACF_GROUP_KEY, $post_id);
-            if (!empty($gfm_settings['fundraising_goal']) && is_numeric($gfm_settings['fundraising_goal'])) {
-                return (float) $gfm_settings['fundraising_goal'];
-            }
-        }
-
-        $goal = get_post_meta($post_id, '_fundraising_goal', true);
-        if (!empty($goal) && is_numeric($goal)) {
-            return (float) $goal;
-        }
-
-        return 1000.00;
-    }
-
-    /**
-     * Create a new campaign in GoFundMe Pro via template duplication
-     *
-     * Uses the duplicate-then-publish workflow because POST /campaigns returns 403.
-     * Template campaign ID is configured in Phase 1 plugin settings.
-     *
-     * @param int $post_id WordPress post ID
-     * @param array $data Campaign data (name, goal, started_at, overview, external_reference_id)
-     */
-    private function create_campaign_in_gfm(int $post_id, array $data): void {
-        // 1. Check prerequisites - get template campaign ID from settings
-        $template_id = get_option('fcg_gfm_template_campaign_id');
-        if (empty($template_id)) {
-            $this->log_error("Cannot create campaign for post {$post_id}: No template campaign ID configured (fcg_gfm_template_campaign_id)");
-            return;
-        }
-
-        // 2. Race condition protection - check for existing lock
-        $lock_key = "fcg_gfm_creating_campaign_{$post_id}";
-        if (get_transient($lock_key)) {
-            $this->log_info("Campaign creation already in progress for post {$post_id}, skipping duplicate request");
-            return;
-        }
-
-        // Set transient lock for 60 seconds
-        set_transient($lock_key, true, 60);
-
-        // 3. Build overrides array for duplication
-        $overrides = [
-            'name'                  => $data['name'],
-            'raw_goal'              => isset($data['goal']) ? (string) $data['goal'] : '1000',
-            'raw_currency_code'     => 'USD',
-            'external_reference_id' => $data['external_reference_id'] ?? (string) $post_id,
-        ];
-
-        // Add started_at in ISO 8601 format if provided
-        if (!empty($data['started_at'])) {
-            $overrides['started_at'] = date('c', strtotime($data['started_at']));
-        }
-
-        // 4. Duplicate template campaign
-        $result = $this->api->duplicate_campaign($template_id, $overrides);
-
-        if (!$result['success'] || empty($result['data']['id'])) {
-            $error = $result['error'] ?? 'Unknown error';
-            $this->log_error("Failed to duplicate campaign template for post {$post_id}: {$error}");
-            delete_transient($lock_key);
-            return;
-        }
-
-        $campaign_id = $result['data']['id'];
-        $campaign_url = $result['data']['canonical_url'] ?? '';
-
-        $this->log_info("Duplicated template campaign to new campaign {$campaign_id} for post {$post_id}");
-
-        // 5. Update overview if present (not available in duplication overrides)
-        if (!empty($data['overview'])) {
-            $update_result = $this->api->update_campaign($campaign_id, ['overview' => $data['overview']]);
-            if (!$update_result['success']) {
-                $this->log_info("Warning: Could not update overview for campaign {$campaign_id}: " . ($update_result['error'] ?? 'Unknown'));
-                // Continue - overview update is non-fatal
-            }
-        }
-
-        // 6. Publish campaign to make it active
-        $publish_result = $this->api->publish_campaign($campaign_id);
-        if (!$publish_result['success']) {
-            $this->log_info("Warning: Could not publish campaign {$campaign_id}: " . ($publish_result['error'] ?? 'Unknown'));
-            // Continue - campaign can be published manually later
-        } else {
-            $this->log_info("Published campaign {$campaign_id} for post {$post_id}");
-        }
-
-        // 7. Store campaign data in post meta
-        update_post_meta($post_id, self::META_CAMPAIGN_ID, $campaign_id);
-        update_post_meta($post_id, self::META_CAMPAIGN_URL, $campaign_url);
-        update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
-
-        // 8. Cleanup - delete transient lock
-        delete_transient($lock_key);
-
-        $this->log_info("Created campaign {$campaign_id} for post {$post_id} via template duplication");
-    }
-
-    /**
-     * Update an existing campaign in GoFundMe Pro
-     *
-     * @param int $post_id WordPress post ID
-     * @param string|int $campaign_id GoFundMe Pro campaign ID
-     * @param array $data Campaign data
-     */
-    private function update_campaign_in_gfm(int $post_id, $campaign_id, array $data): void {
-        $result = $this->api->update_campaign($campaign_id, $data);
-
-        if ($result['success']) {
-            update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
-            $this->log_info("Updated campaign {$campaign_id} for post {$post_id}");
-        } else {
-            $error = $result['error'] ?? 'Unknown error';
-            $this->log_error("Failed to update campaign {$campaign_id} for post {$post_id}: {$error}");
-        }
-    }
-
-    /**
-     * Sync fund to GoFundMe Pro as a campaign
-     *
-     * @param int $post_id Post ID
-     * @param WP_Post $post Post object
-     */
-    private function sync_campaign_to_gofundme(int $post_id, WP_Post $post): void {
-        // Check if campaign sync is disabled for this fund
-        if (!$this->should_sync_campaign($post_id)) {
-            return;
-        }
-
-        $campaign_data = $this->build_campaign_data($post);
-        $campaign_id = $this->get_campaign_id($post_id);
-
-        if ($campaign_id) {
-            $this->update_campaign_in_gfm($post_id, $campaign_id, $campaign_data);
-        } else {
-            if ($post->post_status === 'publish') {
-                $this->create_campaign_in_gfm($post_id, $campaign_data);
-            }
-        }
-    }
-
-    /**
-     * Get campaign ID from post meta
-     *
-     * @param int $post_id Post ID
-     * @return string|null Campaign ID or null
-     */
-    private function get_campaign_id(int $post_id): ?string {
-        $campaign_id = get_post_meta($post_id, self::META_CAMPAIGN_ID, true);
-        return !empty($campaign_id) ? (string) $campaign_id : null;
-    }
-
-    /**
-     * Get campaign URL from post meta
-     *
-     * @param int $post_id Post ID
-     * @return string|null Campaign URL or null
-     */
-    private function get_campaign_url(int $post_id): ?string {
-        $campaign_url = get_post_meta($post_id, self::META_CAMPAIGN_URL, true);
-        return !empty($campaign_url) ? $campaign_url : null;
-    }
-
-    /**
-     * Check if campaign sync is enabled for this fund
-     *
-     * @param int $post_id Post ID
-     * @return bool True if campaign should be synced
-     */
-    private function should_sync_campaign(int $post_id): bool {
-        // Check if ACF is available
-        if (!function_exists('get_field')) {
-            return true; // Default to sync if ACF not available
-        }
-
-        $gfm_settings = get_field(self::ACF_GROUP_KEY, $post_id);
-
-        // Check for explicit disable
-        if (!empty($gfm_settings['disable_campaign_sync'])) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

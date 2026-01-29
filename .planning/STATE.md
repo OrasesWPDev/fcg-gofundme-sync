@@ -2,16 +2,16 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-22)
+See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** When a fund is published in WordPress, the designation is automatically created in Classy and linked to the master campaign — no manual data entry required.
 
 ## Current Position
 
 Phase: 7 (Frontend Embed)
-Plan: 1 of 1
+Plan: 2 of 2
 Status: **Phase complete**
-Last activity: 2026-01-29 — Completed 07-01-PLAN.md
+Last activity: 2026-01-29 — Completed 07-02-PLAN.md (staging verification)
 
 Progress: [████████░░] 83% (5 of 6 phases complete)
 
@@ -23,8 +23,8 @@ Classy confirmed single master campaign approach:
 
 **Result:** Old campaign sync code is now obsolete. New roadmap:
 - ~~Phase 5: Code Cleanup~~ ✅ Complete
-- Phase 6: Master Campaign Integration (settings + linking)
-- Phase 7: Frontend Embed
+- ~~Phase 6: Master Campaign Integration~~ ✅ Complete
+- ~~Phase 7: Frontend Embed~~ ✅ Complete (with modal workaround)
 - Phase 8: Admin UI (optional)
 
 See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
@@ -65,6 +65,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Use history.replaceState() for URL parameter injection | 07-01 | Non-disruptive method that adds ?designation={id} without page reload |
 | Document theme changes in plugin repository | 07-01 | Theme file outside plugin repo needs deployment tracking via docs/ |
 | Graceful fallback for unconfigured funds | 07-01 | Show "coming soon" message when designation or settings missing |
+| Disable modals due to Classy SDK incompatibility | 07-02 | SDK custom elements fail inside Bootstrap modals |
+| Direct fund page links instead of modals | 07-02 | Workaround provides working donation path with one extra click |
+| Keep modal code commented (not deleted) | 07-02 | Easy rollback if Classy fixes SDK in future |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -87,13 +90,18 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed Phase 7 (Frontend Embed)
+Stopped at: Completed Phase 7 (Frontend Embed) with modal workaround
+
+**Completed in Phase 7:**
+1. Deployed fund-form.php and archive-funds.php to staging
+2. Verified Classy embed works on single fund pages
+3. Discovered modal incompatibility (Classy SDK + Bootstrap modals)
+4. Implemented workaround: disabled modals, direct fund page links
 
 **Next steps:**
-1. Deploy fund-form.php theme file to staging
-2. Configure plugin settings (master campaign ID and component ID)
-3. Test Classy embed with designation pre-selection
-4. Plan Phase 8 (Admin UI) if needed
+1. Plan Phase 8 (Admin UI) if desired
+2. Deploy theme files to production when ready
+3. Update remaining templates (search.php, taxonomy-fund-category.php, template-flexible.php)
 
 Resume file: None
 
@@ -114,8 +122,16 @@ Resume file: None
 - **Workaround:** Manually reset default in Classy UI
 - **Status:** Documented for future review; doesn't block Phase 8
 
+**Classy SDK Modal Incompatibility (Phase 7):**
+- Classy SDK custom elements (`<cl-donation-form>`) fail inside Bootstrap modals
+- Error: `Failed to construct 'HTMLElement': Illegal constructor`
+- Payment flow breaks when Classy tries to open its internal modal
+- **Workaround:** Disabled archive page modals, use direct fund page links
+- **Status:** Workaround deployed to staging; Classy meeting scheduled to discuss alternatives
+- See: docs/classy-technical-questions.md for meeting prep
+
 **Theme File Deployment (Phase 7):**
-- fund-form.php is theme file, separate from plugin deployment
-- Must be deployed manually to staging/production
+- Theme files (fund-form.php, archive-funds.php) are separate from plugin deployment
+- **Staging:** ✅ Deployed and tested
+- **Production:** Pending (deploy with plugin v2.3.0 go-live)
 - See docs/theme-fund-form-embed.md for deployment instructions
-- **Status:** Documented; awaiting deployment to staging for testing

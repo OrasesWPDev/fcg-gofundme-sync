@@ -48,6 +48,7 @@ Plan 05-01-PLAN.md fully specifies the implementation:
 
 **Discovered:** 2026-01-26
 **Severity:** Complete blocker for Phase 5 execution
+**Status:** Awaiting Classy response to clarifying questions (2026-01-27)
 
 ### The Problem
 
@@ -70,16 +71,56 @@ Classy Support (Luke Dringoli, Jon Bierma) via email 2026-01-26:
 - **FCG Template Source** (762968) — Studio Donation - Embedded
 - All test campaigns created via API duplication are broken
 
-### Options Presented to Classy
+### Classy's Offer (2026-01-27)
 
-1. **Classy runs bulk duplications** using internal Studio endpoints (offered by support)
-2. **Provide fund list** for Classy to batch-create campaigns
-3. **Alternative campaign type** that works with public API
-4. **Wait for public API** to support Studio campaigns (timeline unknown)
+Luke Dringoli offered to:
+1. Duplicate template campaign 758+ times using internal Studio endpoints
+2. Apply updates from spreadsheet with "exact call body" for each campaign
+3. Publish campaigns on our behalf
 
-### Email Sent
+**Critical revelation:** Even Classy-created Studio campaigns cannot be updated via public `updateCampaign` API. Plugin becomes one-way (inbound only) for campaign data.
 
-2026-01-26 to Luke Dringoli & Jon Bierma at GoFundMe Pro requesting recommendation for fastest path to get 758 funds synced with working campaigns.
+### Two-Tier Approach Identified
+
+Analysis of WordPress fund data revealed two categories:
+
+**Rich funds (345 / 40%)** — Have featured image + excerpt
+- Need full Embedded Form with Content Panel
+
+**Simple funds (516 / 60%)** — Have excerpt only, no image
+- Can use Inline Donation Grid only
+
+### Questions Sent to Luke (2026-01-27)
+
+Email sent with clarifying questions before creating data export:
+
+1. Can campaigns work with partial Content Panel data (text but no image)?
+2. For funds WITH images, can we provide WordPress image URLs for Classy to upload?
+3. Should all campaigns get Content Panel data for consistency?
+4. Do Partner Logos carry over from template automatically?
+5. Should campaigns be linked to their corresponding Designation IDs?
+6. What's the workflow for NEW funds after bulk migration?
+7. Any timeline for public Studio API endpoints?
+
+**Email draft saved:** `docs/email-draft-luke-migration.md`
+
+### Data Available for Export
+
+- WordPress Post ID — 100%
+- Fund Title — 100%
+- Excerpt/Description — ~100%
+- Fundraising Goal — varies
+- Featured Image URL — 40% (345 funds)
+- Designation ID — 100% (if needed for linkage)
+
+### What We Need Back from Classy
+
+Mapping file format:
+```
+WordPress Post ID, Campaign ID
+1611, [new campaign ID]
+1938, [new campaign ID]
+```
 
 </blocker>
 

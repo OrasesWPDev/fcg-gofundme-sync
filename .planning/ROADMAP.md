@@ -15,9 +15,7 @@ This roadmap manages the WordPress plugin that synchronizes "funds" custom post 
 - [x] **Phase 4: Inbound Sync** - Poll donation totals from Classy
 - [x] **Phase 5: Code Cleanup** - Remove obsolete campaign sync code
 - [x] **Phase 6: Master Campaign Integration** - Settings + link designations to default group
-
-**In Progress:**
-- [ ] **Phase 7: Frontend Embed** - Simplified embed with `?designation={id}` parameter
+- [x] **Phase 7: Frontend Embed** - Classy embed on single fund pages, modal removal on archive
 
 **Upcoming:**
 - [ ] **Phase 8: Admin UI** - Display designation and donation info (optional)
@@ -86,35 +84,37 @@ Plans:
 
 ---
 
-### Phase 7: Frontend Embed
+### Phase 7: Frontend Embed (COMPLETE)
 **Goal**: Fund pages display Classy donation embed with correct designation pre-selected
 **Depends on**: Phase 6 (settings available)
-**Status**: Planned (2026-01-29)
-**Plans:** 2 plans in 2 waves
+**Status**: Complete (2026-01-29)
+**Plans:** 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Replace fund-form.php with Classy embed + designation pre-selection
-- [ ] 07-02-PLAN.md — Deploy to staging and verify on single fund page AND modal popup
+- [x] 07-01-PLAN.md — Replace fund-form.php with Classy embed + designation pre-selection
+- [x] 07-02-PLAN.md — Deploy to staging and verify
 
-**Implementation:**
-```php
-// fund-form.php
-$designation_id = get_post_meta($post_id, '_gofundme_designation_id', true);
-$master_campaign_id = get_option('fcg_gofundme_master_campaign_id');
-$master_component_id = get_option('fcg_gofundme_master_component_id');
-?>
-<div id="<?php echo esc_attr($master_component_id); ?>"
-     classy="<?php echo esc_attr($master_campaign_id); ?>"></div>
-```
+**Results:**
+- Classy embed working on single fund pages
+- URL parameter injection (`?designation={id}`) pre-selects correct fund
+- **Modal limitation discovered:** Classy SDK incompatible with Bootstrap modals
+- Archive page modals disabled; "Learn More" changed to "Give Now" direct links
 
-URL includes `?designation={id}` to pre-select the fund.
+**Theme Files Modified:**
+- `fund-form.php` - Classy embed implementation
+- `archive-funds.php` - Modal disabled, direct links to fund pages
 
-**Success Criteria:**
-1. Fund page displays Classy donation embed
-2. Correct fund is pre-selected in designation dropdown
-3. Modal popup uses same embed
+**Key Finding:** Classy SDK uses custom elements that fail inside Bootstrap modals with `Failed to construct 'HTMLElement': Illegal constructor`. This is a fundamental SDK architecture limitation. Meeting scheduled with Classy (2026-01-29 4pm) to discuss alternatives.
 
-**Prior work:** See `.planning/phases/archived/07-frontend-embed-original/` for context docs
+**Documentation:**
+- `docs/theme-fund-form-embed.md` - Deployment guide
+- `docs/classy-technical-questions.md` - Questions for Classy meeting
+- `docs/client-fund-page-changes.md` - Client explanation
+
+**Success Criteria (Revised):**
+1. ✅ Single fund page displays Classy donation embed
+2. ✅ Correct fund is pre-selected in designation dropdown
+3. ⚠️ Modal popup removed (SDK limitation) - direct links used instead
 
 ---
 
@@ -138,7 +138,7 @@ URL includes `?designation={id}` to pre-select the fund.
 | 4. Inbound Sync | Complete | 2026-01-26 |
 | 5. Code Cleanup | Complete | 2026-01-29 |
 | 6. Master Campaign Integration | Complete | 2026-01-29 |
-| 7. Frontend Embed | **Planned** | - |
+| 7. Frontend Embed | Complete | 2026-01-29 |
 | 8. Admin UI | Not started | - |
 
 ---
@@ -167,6 +167,9 @@ Classy embed renders with fund pre-selected
 | 6 | Note campaign ID and component ID | Done (mKAgOmLtRHVGFGh_eaqM6) |
 | 6 | Research Classy API for adding to group | Done (Luke confirmed approach) |
 | 4 | Enable Alternate Cron on WP Engine Production | Pending |
+| 7 | Deploy theme files to production (SFTP) | Pending |
+| 7 | Meet with Classy re: modal compatibility | Scheduled (2026-01-29 4pm) |
+| 7 | Update remaining templates (search, taxonomy, flexible) | Pending |
 
 ---
 

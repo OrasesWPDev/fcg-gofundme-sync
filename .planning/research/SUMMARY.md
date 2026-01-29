@@ -1,9 +1,17 @@
 # Research Summary: Classy Campaign Sync
 
+> **ARCHIVED (2026-01-29):** This research predates the architecture pivot (2026-01-28).
+> The campaign duplication approach described here was superseded by the single master
+> campaign architecture. See `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for current approach.
+>
+> **What changed:** Instead of creating 861 per-fund campaigns via duplication, we now use
+> ONE master campaign with all designations. The `?designation={id}` URL parameter pre-selects
+> the fund on the embedded form.
+
 **Project:** FCG GoFundMe Pro Sync - Campaign Integration
 **Domain:** WordPress Plugin with Classy (GoFundMe Pro) API Integration
 **Researched:** 2026-01-22
-**Confidence:** MEDIUM-HIGH
+**Confidence:** MEDIUM-HIGH (research valid, but approach superseded)
 
 ## Executive Summary
 

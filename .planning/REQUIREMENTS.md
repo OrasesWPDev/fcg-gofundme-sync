@@ -1,7 +1,7 @@
 # Requirements: FCG GoFundMe Pro Sync
 
 **Defined:** 2026-01-22
-**Updated:** 2026-01-28 (architecture pivot)
+**Updated:** 2026-01-29 (Phases 5-7 complete)
 **Core Value:** When a fund is published in WordPress, the designation is automatically created in Classy and linked to the master campaign — no manual data entry required.
 
 ## v1 Requirements
@@ -15,18 +15,18 @@ Requirements for single master campaign architecture. Each maps to roadmap phase
 
 ### Code Cleanup (Post-Pivot)
 
-- [ ] **CLEAN-01**: Remove obsolete campaign sync methods from sync handler
-- [ ] **CLEAN-02**: Remove campaign-related constants and post meta logic
-- [ ] **CLEAN-03**: Remove unused API client campaign lifecycle methods
-- [ ] **CLEAN-04**: Update CLAUDE.md to reflect new architecture
-- [ ] **CLEAN-05**: Bump plugin version to mark architecture change
+- [x] **CLEAN-01**: Remove obsolete campaign sync methods from sync handler
+- [x] **CLEAN-02**: Remove campaign-related constants and post meta logic
+- [x] **CLEAN-03**: Remove unused API client campaign lifecycle methods
+- [x] **CLEAN-04**: Update CLAUDE.md to reflect new architecture
+- [x] **CLEAN-05**: Bump plugin version to mark architecture change
 
 ### Master Campaign Integration
 
-- [ ] **MASTER-01**: Rename "Template Campaign ID" setting to "Master Campaign ID"
-- [ ] **MASTER-02**: Add "Master Component ID" setting for embed code
-- [ ] **MASTER-03**: After designation creation, link to master campaign via API
-- [ ] **MASTER-04**: New designations appear in master campaign dropdown
+- [x] **MASTER-01**: Rename "Template Campaign ID" setting to "Master Campaign ID"
+- [x] **MASTER-02**: Add "Master Component ID" setting for embed code
+- [x] **MASTER-03**: After designation creation, link to master campaign via API
+- [x] **MASTER-04**: New designations appear in master campaign dropdown
 
 ### Inbound Sync (Classy → WordPress)
 
@@ -44,10 +44,10 @@ Requirements for single master campaign architecture. Each maps to roadmap phase
 
 ### Frontend Embed Integration
 
-- [ ] **EMBD-01**: Fund single template displays Classy donation embed
-- [ ] **EMBD-02**: Embed uses master campaign with `?designation={id}` parameter
-- [ ] **EMBD-03**: Legacy donation form replaced/removed
-- [ ] **EMBD-04**: Graceful fallback when designation ID not present
+- [x] **EMBD-01**: Fund single template displays Classy donation embed
+- [x] **EMBD-02**: Embed uses master campaign with `?designation={id}` parameter
+- [x] **EMBD-03**: Legacy donation form replaced/removed (modal workaround: direct links)
+- [x] **EMBD-04**: Graceful fallback when designation ID not present
 
 ## v2 Requirements
 
@@ -101,19 +101,19 @@ Which phases cover which requirements. Updated after architecture pivot.
 | SYNC-02 | Phase 4 | Complete |
 | SYNC-03 | Phase 4 | Complete |
 | SYNC-04 | Phase 4 | Complete |
-| CLEAN-01 | Phase 5 | Pending |
-| CLEAN-02 | Phase 5 | Pending |
-| CLEAN-03 | Phase 5 | Pending |
-| CLEAN-04 | Phase 5 | Pending |
-| CLEAN-05 | Phase 5 | Pending |
-| MASTER-01 | Phase 6 | Pending |
-| MASTER-02 | Phase 6 | Pending |
-| MASTER-03 | Phase 6 | Pending |
-| MASTER-04 | Phase 6 | Pending |
-| EMBD-01 | Phase 7 | Pending |
-| EMBD-02 | Phase 7 | Pending |
-| EMBD-03 | Phase 7 | Pending |
-| EMBD-04 | Phase 7 | Pending |
+| CLEAN-01 | Phase 5 | Complete |
+| CLEAN-02 | Phase 5 | Complete |
+| CLEAN-03 | Phase 5 | Complete |
+| CLEAN-04 | Phase 5 | Complete |
+| CLEAN-05 | Phase 5 | Complete |
+| MASTER-01 | Phase 6 | Complete |
+| MASTER-02 | Phase 6 | Complete |
+| MASTER-03 | Phase 6 | Complete |
+| MASTER-04 | Phase 6 | Complete |
+| EMBD-01 | Phase 7 | Complete |
+| EMBD-02 | Phase 7 | Complete |
+| EMBD-03 | Phase 7 | Complete (with modal workaround) |
+| EMBD-04 | Phase 7 | Complete |
 | ADMN-01 | Phase 8 | Pending |
 | ADMN-02 | Phase 8 | Pending |
 | ADMN-03 | Phase 8 | Pending |

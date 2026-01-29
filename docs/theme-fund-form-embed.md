@@ -1,192 +1,263 @@
-# Theme File: fund-form.php - Classy Embed Implementation
+# Theme Files Deployment Guide - Classy Embed Implementation
 
-**Phase:** 07-01 (Frontend Embed)
+**Phase:** 07 (Frontend Embed)
 **Date:** 2026-01-29
-**Status:** Implemented in Local Sites
+**Status:** Complete on Staging, Ready for Production
 
-## Overview
+---
 
-Replaced legacy Acceptiva donation form with Classy embedded donation form in the Community Foundation theme's `fund-form.php` template file.
+## Quick Reference - Files to Deploy
 
-## File Location
+| File | Action | Priority |
+|------|--------|----------|
+| `fund-form.php` | **REPLACE** | Required |
+| `archive-funds.php` | **REPLACE** | Required |
+| `search.php` | Update (same pattern) | Recommended |
+| `taxonomy-fund-category.php` | Update (same pattern) | Recommended |
+| `template-flexible.php` | Update (same pattern) | Recommended |
 
-**Theme:** `community-foundation`
-**File:** `fund-form.php`
-**Path (Local):** `/Users/chadmacbook/Local Sites/frederick-county-gives/app/public/wp-content/themes/community-foundation/fund-form.php`
-**Path (WP Engine):** `~/sites/{site}/wp-content/themes/community-foundation/fund-form.php`
+**Source Location (Local):**
+```
+/Users/chadmacbook/Local Sites/frederick-county-gives/app/public/wp-content/themes/community-foundation/
+```
 
-## Changes Made
+**Destination (WP Engine):**
+```
+wp-content/themes/community-foundation/
+```
 
-### Removed (Legacy Acceptiva Form)
-- `<form class="donate-form">` element
-- Hidden input: `js-product-name`
-- Amount input: `js-product-amount`
-- Add to cart button: `js-add-to-cart`
-- Cart title heading: `js-cart-title`
-- Template part: `get_template_part('fund-cart')`
+---
 
-### Added (Classy Embed)
-- Classy embed div with `classy="{campaign_id}"` attribute
-- Dynamic designation pre-selection via URL parameter injection
-- Graceful fallback for unconfigured funds
-- PHP doc block with version reference (2.3.0)
+## SFTP Deployment Instructions
 
-## Implementation Details
+### Connection Details
 
-### Required Plugin Settings
-The template reads three values from the plugin:
-1. `_gofundme_designation_id` (post meta) - Fund-specific designation ID
-2. `fcg_gofundme_master_campaign_id` (option) - Master campaign ID
-3. `fcg_gofundme_master_component_id` (option) - Master component ID for embed
+**Staging:**
+- Host: `frederickc2stg.sftp.wpengine.com`
+- Port: `2222`
+- Username: `frederickc2stg-{username}` (check WP Engine portal)
+- Path: `/wp-content/themes/community-foundation/`
 
-### Classy Embed Format
-```html
+**Production:**
+- Host: `frederickcount.sftp.wpengine.com`
+- Port: `2222`
+- Username: `frederickcount-{username}` (check WP Engine portal)
+- Path: `/wp-content/themes/community-foundation/`
+
+### Files to Upload
+
+**1. fund-form.php** (REQUIRED)
+- Contains: Classy embedded donation form
+- Used on: Single fund pages
+- Replaces: Legacy Acceptiva donation form
+
+**2. archive-funds.php** (REQUIRED)
+- Contains: Fund listing with "Give Now" links
+- Used on: `/funds/` archive page
+- Changes: Disabled modals, "Learn More" → "Give Now"
+
+---
+
+## What Changed and Why
+
+### Problem Discovered
+The Classy embedded donation SDK has a fundamental incompatibility with Bootstrap modals. When the Classy form is rendered inside a Bootstrap modal:
+- Initial form displays correctly
+- Clicking "Donate" triggers Classy's payment modal
+- Payment modal fails with: `Failed to construct 'HTMLElement': Illegal constructor`
+- Donation cannot be completed
+
+### Solution Implemented
+**Single Fund Pages:** Classy embed works perfectly (no Bootstrap modal involved)
+
+**Archive Pages:** Removed modal functionality entirely
+- Fund titles link directly to fund page
+- "Learn More" changed to "Give Now"
+- Original modal code commented out (not deleted) with notes
+- Users are taken to single fund page where Classy works
+
+---
+
+## File Details
+
+### 1. fund-form.php
+
+**Purpose:** Renders the Classy donation form on single fund pages
+
+**Key Features:**
+- Reads designation ID from post meta (`_gofundme_designation_id`)
+- Reads master campaign/component IDs from plugin settings
+- Injects `?designation={id}` URL parameter via JavaScript
+- Classy SDK reads URL and pre-selects the correct fund
+- Fallback message for funds without designation
+
+**Code Structure:**
+```php
+<?php
+$designation_id = get_post_meta(get_the_ID(), '_gofundme_designation_id', true);
+$master_campaign_id = get_option('fcg_gofundme_master_campaign_id');
+$master_component_id = get_option('fcg_gofundme_master_component_id');
+?>
+
+<!-- JavaScript sets ?designation={id} in URL -->
+<!-- Then Classy embed div renders -->
 <div id="{component_id}" classy="{campaign_id}"></div>
 ```
 
-### Designation Pre-selection
+### 2. archive-funds.php
 
-Different approaches for single pages vs archive pages (modals):
+**Purpose:** Displays fund listings on `/funds/` page
 
-**Single Fund Pages:**
-- JavaScript uses `history.replaceState()` to inject `?designation={id}` parameter
-- Non-disruptive (no page reload)
-- Updates URL immediately on page load
-- Classy SDK reads parameter and pre-selects fund in dropdown
+**Changes Made:**
 
-**Archive Pages (Modals):**
-- `data-designation-id` attribute stores each fund's designation ID on the embed div
-- JavaScript event listeners handle Bootstrap modal `show.bs.modal` and `hidden.bs.modal`
-- On modal show: Sets `?designation={id}` in URL from data attribute
-- On modal hide: Removes designation parameter from URL
-- Stale designation parameters are cleaned on archive page load
-- Handler registers only once per page (prevents duplicate listeners)
+| Line | Original | New |
+|------|----------|-----|
+| ~70 | Title opens modal | Title links to fund page |
+| ~77 | "Learn More" link | "Give Now" link |
+| ~80 | "Give Now" modal button | **HIDDEN** (commented with notes) |
+| ~85 | `get_template_part('fund-modal')` | **HIDDEN** (commented with notes) |
 
-### Fallback Message
-When any required value is missing:
-```html
-<div class="donate-form-fallback">
-  <p class="text-muted">
-    Online donations for this fund are coming soon.
-    Please <a href="/contact/">contact us</a> to make a donation.
-  </p>
-</div>
+**Original Code (now commented):**
+```php
+<!-- Was: Modal trigger -->
+<a class="btn-link" data-toggle="modal" data-target="#fund-<?php the_ID() ?>">Give Now</a>
+
+<!-- Was: Modal template -->
+<?php get_template_part('fund-modal') ?>
 ```
 
-## Security
+**New Code:**
+```php
+<!-- Direct link to fund page -->
+<a class="more-link" href="<?php the_permalink() ?>">Give Now</a>
 
-All output properly escaped:
-- `esc_attr()` for HTML attributes (campaign ID, component ID)
-- `esc_js()` for JavaScript strings (designation ID)
-
-## Deployment
-
-### Prerequisites
-1. Plugin settings must be configured:
-   - Master Campaign ID
-   - Master Component ID
-2. Classy SDK must be loaded on page (handled by Classy WordPress plugin)
-
-### Deployment Steps
-
-**To Staging:**
-```bash
-# From theme repository or manual SFTP
-scp fund-form.php frederickc2stg@frederickc2stg.ssh.wpengine.net:~/sites/frederickc2stg/wp-content/themes/community-foundation/
+<!-- Modal code commented out with explanation -->
 ```
 
-**To Production:**
-```bash
-# From theme repository or manual SFTP
-scp fund-form.php frederickcount@frederickcount.ssh.wpengine.net:~/sites/frederickcount/wp-content/themes/community-foundation/
+---
+
+## Other Files That May Need Updates
+
+These files have the same modal pattern and should be updated for consistency:
+
+### search.php (Line ~203)
+```php
+// Find and comment out:
+<a class="btn-link" rel="bookmark" data-toggle="modal" data-target="#fund-<?php the_ID() ?>">Give Now</a>
 ```
 
-**Note:** This file is part of the theme, not the plugin. Deploy separately from plugin updates.
+### taxonomy-fund-category.php (Line ~44)
+```php
+// Find and comment out:
+<a class="btn-link mt-auto" data-toggle="modal" data-target="#fund-<?php the_ID() ?>">Give Now</a>
+```
+
+### template-flexible.php (Line ~964)
+```php
+// Find and comment out:
+<a class="btn-link mt-auto" data-toggle="modal" data-target="#fund-<?php the_ID() ?>">Give Now</a>
+```
+
+---
+
+## Prerequisites for Production
+
+Before deploying theme files to production:
+
+1. **Plugin Deployed:** FCG GoFundMe Sync plugin v2.3.0+ must be active
+2. **Plugin Settings Configured:**
+   - Master Campaign ID: `764694` (or production campaign ID)
+   - Master Component ID: `mKAgOmLtRHVGFGh_eaqM6` (or production component ID)
+3. **Classy WP Plugin:** Must be installed and configured with correct Org ID
+4. **Funds Synced:** Funds must have `_gofundme_designation_id` in post meta
+
+---
 
 ## Testing Checklist
 
-After deployment:
+### After Deployment to Production
 
-### Single Fund Page Tests
+**Single Fund Page Test:**
+- [ ] Visit any fund page (e.g., `/funds/example-fund/`)
+- [ ] Classy donation form appears
+- [ ] URL shows `?designation={number}`
+- [ ] Select amount and click "Donate"
+- [ ] Payment modal opens (NOT stuck/broken)
+- [ ] Can complete donation flow
 
-1. Visit a fund page that has a designation ID
-   - [ ] Classy embed div appears
-   - [ ] URL includes `?designation={id}` parameter
-   - [ ] Fund pre-selected in designation dropdown
-   - [ ] Donation form functions correctly
+**Archive Page Test:**
+- [ ] Visit `/funds/`
+- [ ] Click any fund title → goes to fund page (no modal)
+- [ ] "Give Now" link → goes to fund page
+- [ ] No Bootstrap modals appear
 
-2. Visit a fund page without designation ID
-   - [ ] Fallback message appears: "Online donations for this fund are coming soon"
-   - [ ] "Contact us" link works
+**Fallback Test:**
+- [ ] Visit a fund without designation ID
+- [ ] Shows "Online donations coming soon" message
 
-### Archive Page / Modal Tests
+---
 
-3. Visit funds archive page (`/funds/`)
-   - [ ] URL does NOT have stale designation parameter
-   - [ ] Open modal for Fund A - verify correct fund shown
-   - [ ] Close modal - URL should be clean (no designation param)
-   - [ ] Open modal for Fund B - verify Fund B (not Fund A) is shown
+## Rollback Instructions
 
-4. Navigation test (critical)
-   - [ ] Visit a single fund page (URL gets designation param)
-   - [ ] Navigate back to archive page
-   - [ ] URL should be clean (designation param removed)
-   - [ ] Open modal for any fund - should work correctly
+If issues occur, restore original files from WP Engine backup or:
 
-### General Tests
+**archive-funds.php rollback:**
+1. Uncomment the modal button (`<a class="btn-link"...>Give Now</a>`)
+2. Uncomment `get_template_part('fund-modal')`
+3. Change "Give Now" back to "Learn More" in the `more-link`
+4. Restore modal trigger on fund title
 
-5. Check browser console for errors
-   - [ ] No JavaScript errors
-   - [ ] No missing SDK errors
-   - [ ] No 404 errors
+**fund-form.php rollback:**
+- Restore from backup (original Acceptiva form code)
 
-6. Test donation flow
-   - [ ] Select amount
-   - [ ] Complete donation form
-   - [ ] Verify donation processes correctly
-
-## Integration Points
-
-### With Plugin
-- Reads `fcg_gofundme_master_campaign_id` option
-- Reads `fcg_gofundme_master_component_id` option
-- Reads `_gofundme_designation_id` post meta
-
-### With Classy SDK
-- Classy SDK loaded by Classy WordPress plugin
-- SDK processes `classy="{id}"` attribute
-- SDK reads `?designation={id}` URL parameter
-
-## Known Limitations
-
-1. **Default Designation Behavior:** Each synced fund briefly becomes the campaign's default designation (lock icon in Classy). Manually reset in Classy UI if needed.
-
-2. **Theme Dependency:** This file must be deployed to the theme directory, separate from the plugin deployment process.
-
-3. **SDK Dependency:** Requires Classy WordPress plugin active and configured on the site.
-
-## Related Files
-
-**Plugin Files:**
-- `includes/class-sync-handler.php` - Syncs designation data to post meta
-- `fcg-gofundme-sync.php` - Registers settings for master campaign/component IDs
-
-**Theme Files:**
-- `fund-form.php` - This file
-- (Legacy) `fund-cart.php` - No longer used, can be removed
+---
 
 ## Version History
 
 **v2.3.0 (2026-01-29):**
-- Initial implementation of Classy embed
-- Replaced legacy Acceptiva form
-- Added designation pre-selection
-- Added graceful fallback
+- Initial Classy embed implementation
+- Replaced Acceptiva donation form
+- Added URL parameter injection for designation pre-selection
 
-**v2.3.0 (2026-01-29, Update 1):**
-- Fixed modal behavior on archive pages
-- Added `is_singular('funds')` detection for page type
-- Added `data-designation-id` attribute to embed div
-- Archive pages: Dynamic URL parameter management on modal open/close
-- Archive pages: Clean stale designation parameters on page load
-- Fixed issue where visiting single fund then returning to archive broke modal opening
+**v2.3.0-modal-fix (2026-01-29):**
+- Discovered Classy SDK incompatibility with Bootstrap modals
+- Removed modal functionality from archive pages
+- Changed "Learn More" to "Give Now" for direct fund page links
+- Documented original code for future reference
+
+---
+
+## Technical Notes
+
+### Why Modals Don't Work
+
+The Classy SDK uses custom HTML elements (`<cl-donation-form>`) and its own modal system. When nested inside a Bootstrap modal:
+
+1. Classy SDK initializes and renders the amount selection form (works)
+2. User clicks "Donate"
+3. Classy tries to open its payment modal
+4. Browser throws: `Failed to construct 'HTMLElement': Illegal constructor`
+5. Payment flow breaks
+
+This is a fundamental SDK architecture issue, not something we can fix with JavaScript workarounds.
+
+### URL Parameter Behavior
+
+The `?designation={id}` parameter tells Classy which fund to pre-select:
+- Set via `history.replaceState()` (no page reload)
+- Classy SDK reads on initialization
+- Parameter persists in URL for bookmarking/sharing
+
+---
+
+## Support
+
+For issues with this implementation:
+1. Check browser console for JavaScript errors
+2. Verify plugin settings are configured
+3. Confirm Classy WP plugin is active
+4. Check fund has designation ID in post meta
+
+---
+
+*Last Updated: 2026-01-29*

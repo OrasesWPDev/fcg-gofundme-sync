@@ -37,10 +37,10 @@ New capabilities to build (post-architecture pivot):
 - [x] Inbound sync: pull goal progress from Classy *(Phase 4 complete)*
 - [x] fundraising_goal ACF field on funds *(Phase 1 complete)*
 - [x] Template campaign ID plugin setting *(Phase 1 complete)*
-- [ ] Code cleanup: remove obsolete campaign sync code *(Phase 5)*
-- [ ] Master campaign settings: rename setting, add component ID *(Phase 6)*
-- [ ] Link designations to master campaign via API *(Phase 6)*
-- [ ] Frontend embed with `?designation={id}` parameter *(Phase 7)*
+- [x] Code cleanup: remove obsolete campaign sync code *(Phase 5 complete)*
+- [x] Master campaign settings: rename setting, add component ID *(Phase 6 complete)*
+- [x] Link designations to master campaign via API *(Phase 6 complete)*
+- [x] Frontend embed with `?designation={id}` parameter *(Phase 7 complete, modal workaround)*
 - [ ] Admin UI: designation ID, donation totals display *(Phase 8, optional)*
 
 ### Out of Scope
@@ -89,4 +89,4 @@ New capabilities to build (post-architecture pivot):
 | Code cleanup before new features | Remove obsolete campaign code for clean codebase | ✓ Phase 5 queued |
 
 ---
-*Last updated: 2026-01-28 after architecture pivot*
+*Last updated: 2026-01-29 — Phases 5-7 complete*

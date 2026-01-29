@@ -1,26 +1,24 @@
 # FCG GoFundMe Pro Sync
 
-A WordPress plugin that synchronizes the "funds" custom post type with GoFundMe Pro (Classy) designations and campaigns via their API.
+A WordPress plugin that synchronizes the "funds" custom post type with GoFundMe Pro (Classy) designations via their API.
 
-**Version:** 2.2.0
+**Version:** 2.3.0
 **Requires:** WordPress 5.8+ | PHP 7.4+
 **License:** GPLv2 or later
 
-## Current Status
+## Architecture (v2.3.0)
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 1. Configuration | Template campaign settings | Complete |
-| 2. Campaign Push Sync | Create/update campaigns on publish | Complete |
-| 3. Campaign Status Management | Draft/trash status sync | Complete |
-| 4. Inbound Sync | Poll donation data from Classy | Complete |
-| 5. Bulk Migration | WP-CLI tool for existing funds | **Blocked** |
-| 6. Admin UI | Enhanced admin display | Not Started |
-| 7. Frontend Embed | Classy donation embed | Not Started |
+Single master campaign model:
+- ONE master campaign in Classy contains all designations
+- Each WordPress fund maps to one Classy designation
+- Designations are linked to master campaign via `PUT /campaigns/{id}` with `{"designation_id": "{id}"}`
+- Frontend embeds use `?designation={id}` parameter to pre-select the correct fund
 
-### Phase 5 Blocker
-
-Classy's public API endpoints (`duplicateCampaign`, `publishCampaign`) do not properly support Studio campaign types. API-created campaigns appear "Published" in the dashboard but the Design and Settings tabs show errors. Awaiting response from Classy support for a path forward.
+```
+WordPress Fund → Designation created via API → Linked to Master Campaign
+                                                      ↓
+                             Frontend: <div classy="{master_id}"> + ?designation={id}
+```
 
 ## Features
 
@@ -28,29 +26,22 @@ Classy's public API endpoints (`duplicateCampaign`, `publishCampaign`) do not pr
 
 **Designation Sync:**
 - Creates designation when fund is published
+- Links designation to master campaign automatically
 - Updates designation when fund is modified
 - Deactivates designation when fund is trashed/unpublished
 - Reactivates designation when fund is restored
 - Deletes designation on permanent delete
 
-**Campaign Sync:**
-- Creates campaign via template duplication when fund is published
-- Updates campaign name, goal, and overview on fund update
-- Unpublishes campaign when fund is set to draft
-- Deactivates campaign when fund is trashed
-- Reactivates and publishes campaign when fund is restored
-
 ### Inbound Sync (Classy → WordPress)
 
 Polls Classy every 15 minutes to fetch:
 - Total donations and donor count
-- Campaign status (active/unpublished/deactivated)
 - Goal progress percentage
 
 ### Admin Features
 
 - Sync status column in funds list
-- Meta box showing designation ID, campaign ID, and sync timestamps
+- Meta box showing designation ID and sync timestamps
 - Manual sync trigger for individual funds
 - WP-CLI commands for operations
 
@@ -76,21 +67,32 @@ The plugin reads credentials from environment variables (recommended) or `wp-con
 
 **WP Engine Setup:** Add variables in User Portal → Environment Variables
 
+**Plugin Settings:**
+- Master Campaign ID - The Classy campaign containing all designations
+- Master Component ID - The embed component ID for frontend integration
+
 ## Post Meta Keys
+
+**Active:**
 
 | Key | Description |
 |-----|-------------|
 | `_gofundme_designation_id` | Classy designation ID |
-| `_gofundme_campaign_id` | Classy campaign ID |
-| `_gofundme_campaign_url` | Campaign public URL |
 | `_gofundme_donation_total` | Total gross donations |
 | `_gofundme_donor_count` | Number of donors |
 | `_gofundme_goal_progress` | Percentage toward goal |
-| `_gofundme_campaign_status` | active/unpublished/deactivated |
 | `_gofundme_last_sync` | Last outbound sync timestamp |
 | `_gofundme_last_inbound_sync` | Last inbound sync timestamp |
 
-## Architecture
+**Legacy (orphaned in v2.3.0):**
+
+| Key | Description |
+|-----|-------------|
+| `_gofundme_campaign_id` | No longer used |
+| `_gofundme_campaign_url` | No longer used |
+| `_gofundme_campaign_status` | No longer used |
+
+## File Structure
 
 ```
 fcg-gofundme-sync.php         # Main plugin file
@@ -109,7 +111,7 @@ assets/
 - PHP 7.4+
 - ACF plugin (for fundraising_goal field)
 - WP Engine hosting (for environment variables)
-- Template campaign configured in Classy
+- Master campaign configured in Classy
 
 ## Debugging
 
@@ -117,20 +119,26 @@ Enable `WP_DEBUG` to see sync operations logged with prefix `[FCG GoFundMe Sync]
 
 ## Changelog
 
+### 2.3.0
+- **Architecture:** Single master campaign with all designations
+- **Added:** Master Campaign ID and Component ID settings
+- **Added:** Automatic designation linking to master campaign
+- **Added:** Frontend embed support with `?designation={id}` pre-selection
+- **Removed:** Per-fund campaign duplication
+- **Removed:** Campaign publish/unpublish/deactivate/reactivate workflow
+- **Simplified:** Sync handler focuses exclusively on designation sync
+
 ### 2.2.0
-- Added inbound sync for donation totals and campaign status
+- Added inbound sync for donation totals
 - Polling runs every 15 minutes via WP-Cron
 
 ### 2.1.0
-- Fixed draft status to call unpublish (not deactivate)
+- Fixed draft status handling
 - Added campaign ID display in admin meta box
-- Fixed deactivated campaign restore sequence
 
 ### 2.0.0
-- Added campaign sync via template duplication
-- Campaign create/update/unpublish/deactivate/reactivate
+- Added campaign sync via template duplication (removed in 2.3.0)
 - Added sync opt-out ACF field support
-- Added template campaign validation
 
 ### 1.0.0
 - Initial release

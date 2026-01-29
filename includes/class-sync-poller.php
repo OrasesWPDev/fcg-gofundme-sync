@@ -53,10 +53,6 @@ class FCG_GFM_Sync_Poller {
      */
     private const META_GOAL_PROGRESS = '_gofundme_goal_progress';
 
-    /**
-     * Meta key for campaign status
-     */
-    private const META_CAMPAIGN_STATUS = '_gofundme_campaign_status';
 
     /**
      * Meta key for last inbound sync timestamp
@@ -200,7 +196,7 @@ class FCG_GFM_Sync_Poller {
      * and stores in WordPress post meta.
      */
     private function poll_campaigns(): void {
-        // Find all funds with campaign IDs
+        // Find all funds with campaign IDs (legacy from per-fund campaign approach)
         $funds_with_campaigns = get_posts([
             'post_type' => 'funds',
             'posts_per_page' => -1,
@@ -214,7 +210,8 @@ class FCG_GFM_Sync_Poller {
         ]);
 
         if (empty($funds_with_campaigns)) {
-            $this->log("Campaign poll: No funds with campaigns found");
+            // Normal state after architecture pivot - no per-fund campaigns exist
+            // Phase 6 will implement master campaign polling for donation totals
             return;
         }
 
@@ -274,10 +271,6 @@ class FCG_GFM_Sync_Poller {
                 $this->log("Failed to fetch campaign overview {$campaign_id} for post {$post_id}: " . ($overview['error'] ?? 'Unknown'));
                 return false;
             }
-
-            // Store campaign status
-            $status = $campaign['data']['status'] ?? '';
-            update_post_meta($post_id, self::META_CAMPAIGN_STATUS, $status);
 
             // Store donation total (API returns string, cast to float)
             $total = floatval($overview['data']['total_gross_amount'] ?? 0);

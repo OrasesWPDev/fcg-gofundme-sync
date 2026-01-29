@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 5 (Code Cleanup)
-Plan: 02 of 4
+Plan: 1 of 4
 Status: **In progress**
-Last activity: 2026-01-29 — Completed 05-02-PLAN.md (poller and admin UI cleanup)
+Last activity: 2026-01-29 — Completed 05-01-PLAN.md (removed obsolete campaign sync code)
 
 Progress: [████░░░░░░] 33% (2 of 6 phases complete, Phase 5: 1 of 4 plans done)
 
@@ -52,9 +52,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Designation sync is critical | - | Keep all of it |
 | Campaign duplication code is dead code | 05 | Remove in Phase 5 |
 | `?designation={id}` URL parameter | - | Pre-selects fund in embed |
-| Silent degradation for empty campaign meta | 05-02 | poll_campaigns() silently returns when no funds have campaigns (expected post-pivot) |
-| Campaign status storage removed | 05-02 | META_CAMPAIGN_STATUS orphaned after pivot |
-| Admin UI shows designation-only info | 05-02 | Prevents confusion from stale campaign data |
+| Removed campaign sync methods from sync handler | 05-01 | 9 methods deleted (sync_campaign_to_gofundme, create_campaign_in_gfm, etc.) |
+| Removed campaign lifecycle methods from API client | 05-01 | 5 methods deleted (duplicate, publish, unpublish, reactivate, deactivate) |
+| Preserved campaign methods for Phase 6 | 05-01 | update_campaign() needed for designation linking, get_campaign_overview() for inbound sync |
 
 ### Pending Manual Work
 
@@ -68,12 +68,11 @@ None. Architecture pivot resolved all blockers.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 05-02-PLAN.md
+Stopped at: Completed 05-01-PLAN.md
 
 **Next steps:**
-1. Execute 05-01-PLAN.md (remove campaign duplication code)
-2. Execute 05-03-PLAN.md (cleanup orphaned campaign meta)
-3. Execute 05-04-PLAN.md (remove unused campaign endpoints)
-4. Verify designation sync still works
+1. Continue with remaining Phase 5 cleanup plans
+2. Verify designation sync still works after cleanup
+3. Proceed to Phase 6 (Master Campaign Integration)
 
 Resume file: None

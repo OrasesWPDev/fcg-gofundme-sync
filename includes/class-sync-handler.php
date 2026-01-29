@@ -284,26 +284,61 @@ class FCG_GFM_Sync_Handler {
      */
     private function create_designation(int $post_id, array $data): void {
         $result = $this->api->create_designation($data);
-        
+
         if ($result['success'] && !empty($result['data']['id'])) {
             $designation_id = $result['data']['id'];
-            
+
             // Store designation ID in post meta
             update_post_meta($post_id, self::META_KEY_DESIGNATION_ID, $designation_id);
             update_post_meta($post_id, self::META_KEY_LAST_SYNC, current_time('mysql'));
-            
+
             // Also update ACF field if it exists
             if (function_exists('update_field')) {
                 update_field(self::ACF_GROUP_KEY . '_gofundme_designation_id', $designation_id, $post_id);
             }
-            
+
             $this->log_info("Created designation {$designation_id} for post {$post_id}");
+
+            // Link designation to master campaign (adds to active designation group)
+            $this->link_designation_to_campaign($designation_id, $post_id);
+
         } else {
             $error = $result['error'] ?? 'Unknown error';
             $this->log_error("Failed to create designation for post {$post_id}: {$error}");
         }
     }
-    
+
+    /**
+     * Link a designation to the master campaign
+     *
+     * This adds the designation to the campaign's active designation group,
+     * making it appear in the donation form dropdown.
+     *
+     * @param string|int $designation_id Designation ID
+     * @param int $post_id WordPress post ID (for logging)
+     */
+    private function link_designation_to_campaign($designation_id, int $post_id): void {
+        $master_campaign_id = get_option('fcg_gofundme_master_campaign_id');
+
+        if (empty($master_campaign_id)) {
+            $this->log_info("Skipping campaign link for designation {$designation_id}: no master campaign configured");
+            return;
+        }
+
+        $result = $this->api->update_campaign($master_campaign_id, [
+            'designation_id' => $designation_id,
+        ]);
+
+        if ($result['success']) {
+            $this->log_info("Linked designation {$designation_id} to master campaign {$master_campaign_id} for post {$post_id}");
+        } else {
+            $error = $result['error'] ?? 'Unknown error';
+            $this->log_error("Failed to link designation {$designation_id} to master campaign {$master_campaign_id}: {$error}");
+            // Note: We don't fail the overall sync - designation was created successfully
+            // The linking can be retried or done manually in Classy UI
+        }
+    }
+
     /**
      * Update an existing designation
      * 

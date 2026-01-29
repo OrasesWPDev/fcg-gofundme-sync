@@ -4,7 +4,7 @@ Tags: gofundme, classy, donations, sync, api, campaigns
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,13 @@ wp fcg-sync retry                      # Retry failed syncs
 When `WP_DEBUG` is enabled, the plugin logs sync operations with prefix `[FCG GoFundMe Sync]`.
 
 == Changelog ==
+
+= 2.3.0 =
+* Architecture: Removed per-fund campaign duplication in favor of single master campaign
+* Removed: Campaign publish/unpublish/deactivate/reactivate workflow
+* Removed: Per-fund campaign sync (META_CAMPAIGN_ID, META_CAMPAIGN_URL)
+* Simplified: Sync handler now focuses exclusively on designation sync
+* Note: Legacy campaign meta remains in database but is no longer used
 
 = 2.2.0 =
 * Added inbound sync for donation totals

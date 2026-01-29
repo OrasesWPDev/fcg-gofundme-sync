@@ -22,6 +22,9 @@ class FCG_GFM_Admin_UI {
             return;
         }
 
+        // Migrate template setting to master setting (one-time)
+        $this->maybe_migrate_template_setting();
+
         // List table column
         add_filter('manage_funds_posts_columns', [$this, 'add_sync_column']);
         add_action('manage_funds_posts_custom_column', [$this, 'render_sync_column'], 10, 2);
@@ -213,10 +216,15 @@ class FCG_GFM_Admin_UI {
      * Register settings
      */
     public function register_settings(): void {
-        register_setting('fcg_gfm_sync', 'fcg_gfm_template_campaign_id', [
+        register_setting('fcg_gfm_sync', 'fcg_gofundme_master_campaign_id', [
             'type' => 'integer',
             'default' => 0,
-            'sanitize_callback' => [$this, 'validate_template_campaign_id'],
+            'sanitize_callback' => [$this, 'validate_master_campaign_id'],
+        ]);
+        register_setting('fcg_gfm_sync', 'fcg_gofundme_master_component_id', [
+            'type' => 'string',
+            'default' => '',
+            'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('fcg_gfm_sync', 'fcg_gfm_poll_enabled', [
             'type' => 'boolean',
@@ -229,19 +237,19 @@ class FCG_GFM_Admin_UI {
     }
 
     /**
-     * Validate template campaign ID against Classy API
+     * Validate master campaign ID against Classy API
      *
      * @param mixed $input Input value
      * @return int Validated campaign ID or previous value on error
      */
-    public function validate_template_campaign_id($input): int {
+    public function validate_master_campaign_id($input): int {
         $input = intval($input);
 
         // Allow clearing the setting
         if ($input === 0) {
-            delete_option('fcg_gfm_template_campaign_name');
-            delete_option('fcg_gfm_template_validation_failed');
-            delete_option('fcg_gfm_template_validation_pending');
+            delete_option('fcg_gofundme_master_campaign_name');
+            delete_option('fcg_gofundme_master_validation_failed');
+            delete_option('fcg_gofundme_master_validation_pending');
             return 0;
         }
 
@@ -250,12 +258,12 @@ class FCG_GFM_Admin_UI {
         // Check if API is configured first
         if (!$api->is_configured()) {
             add_settings_error(
-                'fcg_gfm_template_campaign_id',
+                'fcg_gofundme_master_campaign_id',
                 'api_not_configured',
-                'Cannot validate template: API credentials not configured.',
+                'Cannot validate master campaign: API credentials not configured.',
                 'error'
             );
-            return get_option('fcg_gfm_template_campaign_id', 0);
+            return get_option('fcg_gofundme_master_campaign_id', 0);
         }
 
         $result = $api->get_campaign($input);
@@ -272,14 +280,14 @@ class FCG_GFM_Admin_UI {
 
             if ($is_connection_error) {
                 // Schedule background re-validation
-                if (!wp_next_scheduled('fcg_gfm_revalidate_template')) {
-                    wp_schedule_single_event(time() + 900, 'fcg_gfm_revalidate_template');
+                if (!wp_next_scheduled('fcg_gfm_revalidate_master')) {
+                    wp_schedule_single_event(time() + 900, 'fcg_gfm_revalidate_master');
                 }
-                update_option('fcg_gfm_template_validation_pending', true, false);
+                update_option('fcg_gofundme_master_validation_pending', true, false);
                 add_settings_error(
-                    'fcg_gfm_template_campaign_id',
+                    'fcg_gofundme_master_campaign_id',
                     'api_unreachable',
-                    'Template ID saved. Could not verify with API (connection issue). Re-validation scheduled.',
+                    'Master campaign ID saved. Could not verify with API (connection issue). Re-validation scheduled.',
                     'warning'
                 );
                 return $input;
@@ -287,24 +295,24 @@ class FCG_GFM_Admin_UI {
 
             // Invalid ID - block save
             add_settings_error(
-                'fcg_gfm_template_campaign_id',
+                'fcg_gofundme_master_campaign_id',
                 'invalid_id',
                 'Invalid campaign ID: ' . esc_html($error_msg),
                 'error'
             );
-            return get_option('fcg_gfm_template_campaign_id', 0);
+            return get_option('fcg_gofundme_master_campaign_id', 0);
         }
 
         // Valid - store campaign name
         $campaign_name = $result['data']['name'] ?? 'Unknown';
-        update_option('fcg_gfm_template_campaign_name', $campaign_name, false);
-        delete_option('fcg_gfm_template_validation_failed');
-        delete_option('fcg_gfm_template_validation_pending');
+        update_option('fcg_gofundme_master_campaign_name', $campaign_name, false);
+        delete_option('fcg_gofundme_master_validation_failed');
+        delete_option('fcg_gofundme_master_validation_pending');
 
         add_settings_error(
-            'fcg_gfm_template_campaign_id',
+            'fcg_gofundme_master_campaign_id',
             'valid_id',
-            'Template campaign validated: ' . esc_html($campaign_name),
+            'Master campaign validated: ' . esc_html($campaign_name),
             'success'
         );
 
@@ -324,13 +332,14 @@ class FCG_GFM_Admin_UI {
         $last_poll = get_option('fcg_gfm_last_poll');
         $conflicts = get_option('fcg_gfm_conflict_log', []);
 
-        // Template campaign settings
+        // Master campaign settings
         $api = new FCG_GFM_API_Client();
         $api_configured = $api->is_configured();
-        $template_id = get_option('fcg_gfm_template_campaign_id', 0);
-        $template_name = get_option('fcg_gfm_template_campaign_name', '');
-        $validation_failed = get_option('fcg_gfm_template_validation_failed', false);
-        $validation_pending = get_option('fcg_gfm_template_validation_pending', false);
+        $master_id = get_option('fcg_gofundme_master_campaign_id', 0);
+        $master_name = get_option('fcg_gofundme_master_campaign_name', '');
+        $master_component_id = get_option('fcg_gofundme_master_component_id', '');
+        $validation_failed = get_option('fcg_gofundme_master_validation_failed', false);
+        $validation_pending = get_option('fcg_gofundme_master_validation_pending', false);
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -344,14 +353,14 @@ class FCG_GFM_Admin_UI {
                         <span style="color: #dc3232;">Not Configured</span>
                     <?php endif; ?>
 
-                    <?php if ($template_id && $template_name && !$validation_failed && !$validation_pending): ?>
-                        &nbsp;|&nbsp; <strong>Template:</strong> <?php echo esc_html($template_name); ?>
+                    <?php if ($master_id && $master_name && !$validation_failed && !$validation_pending): ?>
+                        &nbsp;|&nbsp; <strong>Master Campaign:</strong> <?php echo esc_html($master_name); ?>
                         <span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
-                    <?php elseif ($template_id && $validation_pending): ?>
-                        &nbsp;|&nbsp; <strong>Template:</strong> Validation pending
+                    <?php elseif ($master_id && $validation_pending): ?>
+                        &nbsp;|&nbsp; <strong>Master Campaign:</strong> Validation pending
                         <span class="dashicons dashicons-clock" style="color: #f0b849;"></span>
-                    <?php elseif ($template_id && $validation_failed): ?>
-                        &nbsp;|&nbsp; <strong>Template:</strong> Validation failed
+                    <?php elseif ($master_id && $validation_failed): ?>
+                        &nbsp;|&nbsp; <strong>Master Campaign:</strong> Validation failed
                         <span class="dashicons dashicons-warning" style="color: #dc3232;"></span>
                     <?php endif; ?>
                 </p>
@@ -362,25 +371,39 @@ class FCG_GFM_Admin_UI {
 
                 <table class="form-table">
                     <tr>
-                        <th scope="row">Template Campaign ID</th>
+                        <th scope="row">Master Campaign ID</th>
                         <td>
                             <input type="number"
-                                   name="fcg_gfm_template_campaign_id"
-                                   value="<?php echo esc_attr($template_id); ?>"
+                                   name="fcg_gofundme_master_campaign_id"
+                                   value="<?php echo esc_attr($master_id); ?>"
                                    class="regular-text"
                                    min="0"
                                    step="1">
-                            <?php if ($template_name && !$validation_failed): ?>
+                            <?php if ($master_name && !$validation_failed): ?>
                                 <p class="description" style="color: #46b450;">
                                     <span class="dashicons dashicons-yes"></span>
-                                    Template: <?php echo esc_html($template_name); ?>
+                                    Campaign: <?php echo esc_html($master_name); ?>
                                 </p>
                             <?php endif; ?>
                             <p class="description">
-                                Enter the campaign ID to use as template for fund campaigns.
+                                The master campaign that contains all fund designations (e.g., 764694).
                                 <a href="https://www.classy.org/admin/campaigns" target="_blank">
                                     Find campaign ID in Classy <span class="dashicons dashicons-external"></span>
                                 </a>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Master Component ID</th>
+                        <td>
+                            <input type="text"
+                                   name="fcg_gofundme_master_component_id"
+                                   value="<?php echo esc_attr($master_component_id); ?>"
+                                   class="regular-text"
+                                   placeholder="e.g., mKAgOmLtRHVGFGh_eaqM6">
+                            <p class="description">
+                                Component ID from Classy embed code. Used for frontend donation embeds.
+                                <br>Find this in Classy admin under campaign embed settings.
                             </p>
                         </td>
                     </tr>
@@ -453,41 +476,41 @@ class FCG_GFM_Admin_UI {
     }
 
     /**
-     * Background re-validation of template campaign ID
+     * Background re-validation of master campaign ID
      * Called via WP-Cron when API was unreachable during initial validation
      */
-    public static function revalidate_template_campaign(): void {
-        $template_id = get_option('fcg_gfm_template_campaign_id', 0);
-        if (!$template_id) {
-            delete_option('fcg_gfm_template_validation_failed');
-            delete_option('fcg_gfm_template_validation_pending');
+    public static function revalidate_master_campaign(): void {
+        $master_id = get_option('fcg_gofundme_master_campaign_id', 0);
+        if (!$master_id) {
+            delete_option('fcg_gofundme_master_validation_failed');
+            delete_option('fcg_gofundme_master_validation_pending');
             return;
         }
 
         $api = new FCG_GFM_API_Client();
         if (!$api->is_configured()) {
-            update_option('fcg_gfm_template_validation_failed', true, false);
-            delete_option('fcg_gfm_template_validation_pending');
+            update_option('fcg_gofundme_master_validation_failed', true, false);
+            delete_option('fcg_gofundme_master_validation_pending');
             return;
         }
 
-        $result = $api->get_campaign($template_id);
+        $result = $api->get_campaign($master_id);
 
         if (!$result['success']) {
-            update_option('fcg_gfm_template_validation_failed', true, false);
-            delete_option('fcg_gfm_template_validation_pending');
+            update_option('fcg_gofundme_master_validation_failed', true, false);
+            delete_option('fcg_gofundme_master_validation_pending');
 
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[FCG GoFundMe Sync] Background template validation failed: ' . ($result['error'] ?? 'Unknown error'));
+                error_log('[FCG GoFundMe Sync] Background master campaign validation failed: ' . ($result['error'] ?? 'Unknown error'));
             }
         } else {
             // Success
-            update_option('fcg_gfm_template_campaign_name', $result['data']['name'] ?? 'Unknown', false);
-            delete_option('fcg_gfm_template_validation_failed');
-            delete_option('fcg_gfm_template_validation_pending');
+            update_option('fcg_gofundme_master_campaign_name', $result['data']['name'] ?? 'Unknown', false);
+            delete_option('fcg_gofundme_master_validation_failed');
+            delete_option('fcg_gofundme_master_validation_pending');
 
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[FCG GoFundMe Sync] Background template validation succeeded: ' . ($result['data']['name'] ?? 'Unknown'));
+                error_log('[FCG GoFundMe Sync] Background master campaign validation succeeded: ' . ($result['data']['name'] ?? 'Unknown'));
             }
         }
     }
@@ -496,10 +519,10 @@ class FCG_GFM_Admin_UI {
      * Show admin notices for sync errors
      */
     public function show_sync_notices(): void {
-        // Check for template validation failure (show on all admin pages)
-        if (get_option('fcg_gfm_template_validation_failed')) {
+        // Check for master campaign validation failure (show on all admin pages)
+        if (get_option('fcg_gofundme_master_validation_failed')) {
             printf(
-                '<div class="notice notice-error is-dismissible"><p><strong>GoFundMe Pro Sync:</strong> Template campaign ID validation failed. <a href="%s">Check settings</a></p></div>',
+                '<div class="notice notice-error is-dismissible"><p><strong>GoFundMe Pro Sync:</strong> Master campaign ID validation failed. <a href="%s">Check settings</a></p></div>',
                 esc_url(admin_url('edit.php?post_type=funds&page=fcg-gfm-sync-settings'))
             );
         }
@@ -662,6 +685,37 @@ class FCG_GFM_Admin_UI {
             } else {
                 // Empty or invalid - remove the meta
                 delete_post_meta($post_id, '_gofundme_fundraising_goal');
+            }
+        }
+    }
+
+    /**
+     * Migrate old template campaign setting to new master campaign setting
+     * One-time migration for existing installations
+     */
+    private function maybe_migrate_template_setting(): void {
+        // Check if old setting exists and new setting doesn't
+        $old_value = get_option('fcg_gfm_template_campaign_id');
+        $new_value = get_option('fcg_gofundme_master_campaign_id');
+
+        if ($old_value && !$new_value) {
+            // Migrate campaign ID
+            update_option('fcg_gofundme_master_campaign_id', $old_value);
+            delete_option('fcg_gfm_template_campaign_id');
+
+            // Migrate campaign name
+            $old_name = get_option('fcg_gfm_template_campaign_name');
+            if ($old_name) {
+                update_option('fcg_gofundme_master_campaign_name', $old_name);
+                delete_option('fcg_gfm_template_campaign_name');
+            }
+
+            // Clean up old validation options
+            delete_option('fcg_gfm_template_validation_failed');
+            delete_option('fcg_gfm_template_validation_pending');
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[FCG GoFundMe Sync] Migrated template campaign setting to master campaign setting');
             }
         }
     }

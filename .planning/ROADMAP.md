@@ -14,10 +14,12 @@ This roadmap manages the WordPress plugin that synchronizes "funds" custom post 
 - [x] **Phase 1: Configuration** - Template campaign setting and fundraising goal field
 - [x] **Phase 4: Inbound Sync** - Poll donation totals from Classy
 - [x] **Phase 5: Code Cleanup** - Remove obsolete campaign sync code
+- [x] **Phase 6: Master Campaign Integration** - Settings + link designations to default group
 
-**New Work (Post-Pivot):**
-- [ ] **Phase 6: Master Campaign Integration** - Settings + link designations to default group
+**In Progress:**
 - [ ] **Phase 7: Frontend Embed** - Simplified embed with `?designation={id}` parameter
+
+**Upcoming:**
 - [ ] **Phase 8: Admin UI** - Display designation and donation info (optional)
 
 ## Phase Details
@@ -63,7 +65,7 @@ Plans:
 
 ### Phase 6: Master Campaign Integration (COMPLETE)
 **Goal**: Configure master campaign settings and link new designations to master campaign's active group
-**Depends on**: Phase 5 (clean codebase) ✅
+**Depends on**: Phase 5 (clean codebase)
 **Status**: Complete (2026-01-29)
 **Plans:** 2 plans in 2 waves
 
@@ -87,6 +89,12 @@ Plans:
 ### Phase 7: Frontend Embed
 **Goal**: Fund pages display Classy donation embed with correct designation pre-selected
 **Depends on**: Phase 6 (settings available)
+**Status**: Planned (2026-01-29)
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 07-01-PLAN.md — Replace fund-form.php with Classy embed + designation pre-selection
+- [ ] 07-02-PLAN.md — Deploy to staging and verify on single fund page AND modal popup
 
 **Implementation:**
 ```php
@@ -129,8 +137,8 @@ URL includes `?designation={id}` to pre-select the fund.
 | 1. Configuration | Complete | 2026-01-23 |
 | 4. Inbound Sync | Complete | 2026-01-26 |
 | 5. Code Cleanup | Complete | 2026-01-29 |
-| 6. Master Campaign Integration | **Complete** | 2026-01-29 |
-| 7. Frontend Embed | Not started | - |
+| 6. Master Campaign Integration | Complete | 2026-01-29 |
+| 7. Frontend Embed | **Planned** | - |
 | 8. Admin UI | Not started | - |
 
 ---

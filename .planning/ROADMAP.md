@@ -13,10 +13,10 @@ This roadmap manages the WordPress plugin that synchronizes "funds" custom post 
 **Completed:**
 - [x] **Phase 1: Configuration** - Template campaign setting and fundraising goal field
 - [x] **Phase 4: Inbound Sync** - Poll donation totals from Classy
+- [x] **Phase 5: Code Cleanup** - Remove obsolete campaign sync code
 
 **New Work (Post-Pivot):**
-- [ ] **Phase 5: Code Cleanup** - Remove obsolete campaign sync code
-- [ ] **Phase 6: Master Campaign Integration** - Settings + link designations to master campaign
+- [ ] **Phase 6: Master Campaign Integration** - Settings + link designations to default group
 - [ ] **Phase 7: Frontend Embed** - Simplified embed with `?designation={id}` parameter
 - [ ] **Phase 8: Admin UI** - Display designation and donation info (optional)
 
@@ -40,49 +40,51 @@ Plans:
 
 ---
 
-### Phase 5: Code Cleanup
+### Phase 5: Code Cleanup (COMPLETE)
 **Goal**: Remove obsolete campaign duplication and status management code
-**Status**: Planning complete
+**Status**: Complete (2026-01-29)
 **Plans:** 4 plans in 3 waves
 
 Plans:
-- [ ] 05-01-PLAN.md — Remove campaign methods from sync-handler and API client
-- [ ] 05-02-PLAN.md — Update sync-poller and admin-ui for post-pivot state
-- [ ] 05-03-PLAN.md — Update CLAUDE.md and bump plugin version to 2.3.0
-- [ ] 05-04-PLAN.md — Deploy to staging and verify designation sync
+- [x] 05-01-PLAN.md — Remove campaign methods from sync-handler and API client
+- [x] 05-02-PLAN.md — Update sync-poller and admin-ui for post-pivot state
+- [x] 05-03-PLAN.md — Update CLAUDE.md and bump plugin version to 2.3.0
+- [x] 05-04-PLAN.md — Deploy to staging and verify designation sync
 
-**What to remove:**
-- `duplicate_campaign()`, `publish_campaign()`, `unpublish_campaign()`, `deactivate_campaign()`, `reactivate_campaign()` methods
-- Campaign status hooks in sync handler
-- Per-fund campaign ID/URL post meta logic
+**Results:**
+- ~430 lines of campaign code removed
+- Plugin v2.3.0 deployed to staging
+- 859 published funds all have designation IDs
+- 11 test designations cleaned up from Classy
 
-**What to keep:**
-- All designation sync code
-- OAuth2 and API client infrastructure
-- Inbound sync polling infrastructure
-
-**Success Criteria:**
-1. Plugin still syncs designations correctly
-2. No orphaned campaign code
-3. Plugin activates without errors
+**Key Finding:** Creating a designation via API does NOT add it to the campaign's "Default Active Group". Phase 6 addresses this.
 
 ---
 
 ### Phase 6: Master Campaign Integration
-**Goal**: Configure master campaign settings and link designations to it
-**Depends on**: Phase 5 (clean codebase)
+**Goal**: Configure master campaign settings and link new designations to master campaign's active group
+**Depends on**: Phase 5 (clean codebase) ✅
+**Status**: Planned
+**Plans:** 2 plans in 2 waves
 
-**Combines:**
-- Rename "Template Campaign ID" → "Master Campaign ID"
+Plans:
+- [ ] 06-01-PLAN.md — Settings update (rename template to master, add component ID) + sync handler linking
+- [ ] 06-02-PLAN.md — Deploy to staging and verify designation appears in master campaign
+
+**Scope:**
+- Rename "Template Campaign ID" to "Master Campaign ID"
 - Add "Master Component ID" setting (for embed code)
-- After designation creation, call `PUT /campaigns/{id}` with `{"designation_id": "{id}"}`
+- After designation creation, call `PUT /campaigns/{id}` with `{"designation_id": ...}` to link
+
+**Research Confirmed (HIGH confidence):**
+Luke Dringoli (GoFundMe Principal Technical Partnerships Manager) confirmed via email on 2026-01-28 that `PUT /campaigns/{id}` with `{"designation_id": ...}` adds the designation to the campaign's active designation group.
 
 **Success Criteria:**
 1. Admin can configure master campaign ID and component ID
-2. When fund is published, designation is linked to master campaign
-3. New designations appear in master campaign's dropdown
+2. When fund is published, designation is created AND linked to master campaign
+3. New designations appear in donation embed dropdown immediately
 
-**Manual work:** Create master campaign in Classy UI first
+**Manual work:** ~~Create master campaign in Classy UI~~ Done (Campaign 764694, Component mKAgOmLtRHVGFGh_eaqM6)
 
 ---
 
@@ -130,8 +132,8 @@ URL includes `?designation={id}` to pre-select the fund.
 |-------|--------|-----------|
 | 1. Configuration | Complete | 2026-01-23 |
 | 4. Inbound Sync | Complete | 2026-01-26 |
-| 5. Code Cleanup | Planning complete | - |
-| 6. Master Campaign Integration | Not started | - |
+| 5. Code Cleanup | Complete | 2026-01-29 |
+| 6. Master Campaign Integration | **Planned** | - |
 | 7. Frontend Embed | Not started | - |
 | 8. Admin UI | Not started | - |
 
@@ -157,10 +159,11 @@ Classy embed renders with fund pre-selected
 
 | Phase | Task | Status |
 |-------|------|--------|
-| 6 | Create master campaign in Classy UI | Pending |
-| 6 | Note campaign ID and component ID | Pending |
+| 6 | Create master campaign in Classy UI | Done (764694) |
+| 6 | Note campaign ID and component ID | Done (mKAgOmLtRHVGFGh_eaqM6) |
+| 6 | Research Classy API for adding to group | Done (Luke confirmed approach) |
 | 4 | Enable Alternate Cron on WP Engine Production | Pending |
 
 ---
 
-*Last updated: 2026-01-28*
+*Last updated: 2026-01-29*

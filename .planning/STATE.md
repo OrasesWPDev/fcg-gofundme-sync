@@ -8,12 +8,12 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 
 ## Current Position
 
-Phase: 6 (Master Campaign Integration)
-Plan: 1 of 1 complete
-Status: **Phase complete**
-Last activity: 2026-01-29 — Completed Plan 06-01 (Master Campaign Integration)
+Phase: 7 (Frontend Embed)
+Plan: Not started
+Status: **Ready to begin**
+Last activity: 2026-01-29 — Completed Phase 6 (Master Campaign Integration)
 
-Progress: [██████░░░░] 60% (4 of 6 phases complete)
+Progress: [███████░░░] 67% (4 of 6 phases complete)
 
 ## Architecture Pivot Summary (2026-01-28)
 
@@ -36,7 +36,7 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 01 - Configuration | Complete |
 | 04 - Inbound Sync | Complete |
 | 05 - Code Cleanup | Complete (2026-01-29) |
-| 06 - Master Campaign Integration | **Complete** (2026-01-29) |
+| 06 - Master Campaign Integration | **Complete** (2026-01-29) ✅ |
 | 07 - Frontend Embed | Not started |
 | 08 - Admin UI | Not started |
 
@@ -84,7 +84,7 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed Plan 06-01 (Master Campaign Integration)
+Stopped at: Completed Phase 6 (Master Campaign Integration)
 
 **Next steps:**
 1. Plan Phase 7 (Frontend Embed)
@@ -92,3 +92,20 @@ Stopped at: Completed Plan 06-01 (Master Campaign Integration)
 3. Add shortcode for per-fund donation embeds with designation pre-selection
 
 Resume file: None
+
+## Phase 6 Verification Results
+
+- **Test Fund:** "Phase 6 Test Fund - DELETE ME" (post ID 13854)
+- **Designation ID:** 1896370
+- **Classy Verification:** ✅ Designation appears in campaign 764694's Default Active Group
+- **Active Group Count:** 862 designations (857 + test + 5 pending linked)
+- **API Confirmation:** `update_campaign()` with `designation_id` adds to active group
+- **5 Pending Designations:** Linked via script (13826, 13795, 13782, 13781, 13758)
+
+## Known Issues
+
+**Default Designation Overwrite (Phase 6):**
+- `update_campaign()` API sets each new designation as the campaign default
+- Last synced designation becomes the default (lock icon in Classy)
+- **Workaround:** Manually reset default in Classy UI
+- **Status:** Documented for future review; doesn't block Phase 7

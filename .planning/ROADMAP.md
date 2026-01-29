@@ -61,28 +61,24 @@ Plans:
 
 ---
 
-### Phase 6: Master Campaign Integration
+### Phase 6: Master Campaign Integration (COMPLETE)
 **Goal**: Configure master campaign settings and link new designations to master campaign's active group
 **Depends on**: Phase 5 (clean codebase) ✅
-**Status**: Planned
+**Status**: Complete (2026-01-29)
 **Plans:** 2 plans in 2 waves
 
 Plans:
-- [ ] 06-01-PLAN.md — Settings update (rename template to master, add component ID) + sync handler linking
-- [ ] 06-02-PLAN.md — Deploy to staging and verify designation appears in master campaign
+- [x] 06-01-PLAN.md — Settings update (rename template to master, add component ID) + sync handler linking
+- [x] 06-02-PLAN.md — Deploy to staging and verify designation appears in master campaign
 
-**Scope:**
-- Rename "Template Campaign ID" to "Master Campaign ID"
-- Add "Master Component ID" setting (for embed code)
-- After designation creation, call `PUT /campaigns/{id}` with `{"designation_id": ...}` to link
+**Results:**
+- Settings renamed from "Template" to "Master Campaign"
+- Master Component ID setting added for frontend embeds
+- Automatic designation linking via `update_campaign()` API
+- 862 designations now in Default Active Group
+- 5 pending designations linked via one-time script
 
-**Research Confirmed (HIGH confidence):**
-Luke Dringoli (GoFundMe Principal Technical Partnerships Manager) confirmed via email on 2026-01-28 that `PUT /campaigns/{id}` with `{"designation_id": ...}` adds the designation to the campaign's active designation group.
-
-**Success Criteria:**
-1. Admin can configure master campaign ID and component ID
-2. When fund is published, designation is created AND linked to master campaign
-3. New designations appear in donation embed dropdown immediately
+**Known Issue:** `update_campaign()` API sets each new designation as campaign default. Workaround: manually reset in Classy UI. See 06-02-SUMMARY.md for details.
 
 **Manual work:** ~~Create master campaign in Classy UI~~ Done (Campaign 764694, Component mKAgOmLtRHVGFGh_eaqM6)
 
@@ -133,7 +129,7 @@ URL includes `?designation={id}` to pre-select the fund.
 | 1. Configuration | Complete | 2026-01-23 |
 | 4. Inbound Sync | Complete | 2026-01-26 |
 | 5. Code Cleanup | Complete | 2026-01-29 |
-| 6. Master Campaign Integration | **Planned** | - |
+| 6. Master Campaign Integration | **Complete** | 2026-01-29 |
 | 7. Frontend Embed | Not started | - |
 | 8. Admin UI | Not started | - |
 

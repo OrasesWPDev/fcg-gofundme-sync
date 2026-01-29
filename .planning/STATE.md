@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 7 (Frontend Embed)
-Plan: Not started
-Status: **Ready to begin**
-Last activity: 2026-01-29 — Completed Phase 6 (Master Campaign Integration)
+Plan: 1 of 1
+Status: **Phase complete**
+Last activity: 2026-01-29 — Completed 07-01-PLAN.md
 
-Progress: [███████░░░] 67% (4 of 6 phases complete)
+Progress: [████████░░] 83% (5 of 6 phases complete)
 
 ## Architecture Pivot Summary (2026-01-28)
 
@@ -36,8 +36,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 01 - Configuration | Complete |
 | 04 - Inbound Sync | Complete |
 | 05 - Code Cleanup | Complete (2026-01-29) |
-| 06 - Master Campaign Integration | **Complete** (2026-01-29) ✅ |
-| 07 - Frontend Embed | Not started |
+| 06 - Master Campaign Integration | Complete (2026-01-29) |
+| 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
 | 08 - Admin UI | Not started |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
@@ -62,6 +62,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Graceful linking failure | 06-01 | Linking failure logged but doesn't fail overall sync - designation is created |
 | Automatic migration for existing installations | 06-01 | Old template setting migrates to new master setting on admin page load |
 | Master component ID stored separately | 06-01 | Used for frontend embed code, not API calls |
+| Use history.replaceState() for URL parameter injection | 07-01 | Non-disruptive method that adds ?designation={id} without page reload |
+| Document theme changes in plugin repository | 07-01 | Theme file outside plugin repo needs deployment tracking via docs/ |
+| Graceful fallback for unconfigured funds | 07-01 | Show "coming soon" message when designation or settings missing |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -84,12 +87,13 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed Phase 6 (Master Campaign Integration)
+Stopped at: Completed Phase 7 (Frontend Embed)
 
 **Next steps:**
-1. Plan Phase 7 (Frontend Embed)
-2. Implement: Generate embed code with master component ID
-3. Add shortcode for per-fund donation embeds with designation pre-selection
+1. Deploy fund-form.php theme file to staging
+2. Configure plugin settings (master campaign ID and component ID)
+3. Test Classy embed with designation pre-selection
+4. Plan Phase 8 (Admin UI) if needed
 
 Resume file: None
 
@@ -108,4 +112,10 @@ Resume file: None
 - `update_campaign()` API sets each new designation as the campaign default
 - Last synced designation becomes the default (lock icon in Classy)
 - **Workaround:** Manually reset default in Classy UI
-- **Status:** Documented for future review; doesn't block Phase 7
+- **Status:** Documented for future review; doesn't block Phase 8
+
+**Theme File Deployment (Phase 7):**
+- fund-form.php is theme file, separate from plugin deployment
+- Must be deployed manually to staging/production
+- See docs/theme-fund-form-embed.md for deployment instructions
+- **Status:** Documented; awaiting deployment to staging for testing

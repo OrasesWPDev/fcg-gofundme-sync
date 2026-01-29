@@ -45,10 +45,22 @@ The template reads three values from the plugin:
 ```
 
 ### Designation Pre-selection
-JavaScript uses `history.replaceState()` to inject `?designation={id}` parameter into URL:
+
+Different approaches for single pages vs archive pages (modals):
+
+**Single Fund Pages:**
+- JavaScript uses `history.replaceState()` to inject `?designation={id}` parameter
 - Non-disruptive (no page reload)
-- Only adds parameter if not already present
+- Updates URL immediately on page load
 - Classy SDK reads parameter and pre-selects fund in dropdown
+
+**Archive Pages (Modals):**
+- `data-designation-id` attribute stores each fund's designation ID on the embed div
+- JavaScript event listeners handle Bootstrap modal `show.bs.modal` and `hidden.bs.modal`
+- On modal show: Sets `?designation={id}` in URL from data attribute
+- On modal hide: Removes designation parameter from URL
+- Stale designation parameters are cleaned on archive page load
+- Handler registers only once per page (prevents duplicate listeners)
 
 ### Fallback Message
 When any required value is missing:
@@ -95,24 +107,43 @@ scp fund-form.php frederickcount@frederickcount.ssh.wpengine.net:~/sites/frederi
 
 After deployment:
 
+### Single Fund Page Tests
+
 1. Visit a fund page that has a designation ID
-   - Verify Classy embed div appears
-   - Verify designation parameter in URL
-   - Verify fund pre-selected in dropdown
-   - Verify donation form functions correctly
+   - [ ] Classy embed div appears
+   - [ ] URL includes `?designation={id}` parameter
+   - [ ] Fund pre-selected in designation dropdown
+   - [ ] Donation form functions correctly
 
 2. Visit a fund page without designation ID
-   - Verify fallback message appears
-   - Verify "contact us" link works
+   - [ ] Fallback message appears: "Online donations for this fund are coming soon"
+   - [ ] "Contact us" link works
 
-3. Check browser console for errors
-   - No JavaScript errors
-   - No missing SDK errors
+### Archive Page / Modal Tests
 
-4. Test donation flow
-   - Select amount
-   - Complete donation form
-   - Verify donation processes correctly
+3. Visit funds archive page (`/funds/`)
+   - [ ] URL does NOT have stale designation parameter
+   - [ ] Open modal for Fund A - verify correct fund shown
+   - [ ] Close modal - URL should be clean (no designation param)
+   - [ ] Open modal for Fund B - verify Fund B (not Fund A) is shown
+
+4. Navigation test (critical)
+   - [ ] Visit a single fund page (URL gets designation param)
+   - [ ] Navigate back to archive page
+   - [ ] URL should be clean (designation param removed)
+   - [ ] Open modal for any fund - should work correctly
+
+### General Tests
+
+5. Check browser console for errors
+   - [ ] No JavaScript errors
+   - [ ] No missing SDK errors
+   - [ ] No 404 errors
+
+6. Test donation flow
+   - [ ] Select amount
+   - [ ] Complete donation form
+   - [ ] Verify donation processes correctly
 
 ## Integration Points
 
@@ -151,3 +182,11 @@ After deployment:
 - Replaced legacy Acceptiva form
 - Added designation pre-selection
 - Added graceful fallback
+
+**v2.3.0 (2026-01-29, Update 1):**
+- Fixed modal behavior on archive pages
+- Added `is_singular('funds')` detection for page type
+- Added `data-designation-id` attribute to embed div
+- Archive pages: Dynamic URL parameter management on modal open/close
+- Archive pages: Clean stale designation parameters on page load
+- Fixed issue where visiting single fund then returning to archive broke modal opening

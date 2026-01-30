@@ -163,6 +163,37 @@ class FCG_GFM_Admin_UI {
                 <?php echo $sync_source ? esc_html(ucfirst($sync_source)) : '<em>Unknown</em>'; ?>
             </p>
 
+            <?php
+            // Get inbound sync data
+            $donation_total = get_post_meta($post->ID, '_gofundme_donation_total', true);
+            $donor_count = get_post_meta($post->ID, '_gofundme_donor_count', true);
+            $goal_progress = get_post_meta($post->ID, '_gofundme_goal_progress', true);
+            $last_inbound_sync = get_post_meta($post->ID, '_gofundme_last_inbound_sync', true);
+
+            // Display donation totals section if data exists
+            if ($donation_total || $donor_count):
+            ?>
+            <hr style="margin: 12px 0;">
+            <p>
+                <strong>Donation Total:</strong><br>
+                <?php echo $donation_total ? '$' . number_format((float) $donation_total, 2) : '<em>$0.00</em>'; ?>
+            </p>
+            <p>
+                <strong>Donor Count:</strong><br>
+                <?php echo $donor_count ? intval($donor_count) : '<em>0</em>'; ?>
+            </p>
+            <?php if ($fundraising_goal && $goal_progress): ?>
+            <p>
+                <strong>Goal Progress:</strong><br>
+                <?php echo number_format((float) $goal_progress, 1); ?>%
+            </p>
+            <?php endif; ?>
+            <p>
+                <strong>Last Inbound Sync:</strong><br>
+                <?php echo $last_inbound_sync ? esc_html($last_inbound_sync) : '<em>Never</em>'; ?>
+            </p>
+            <?php endif; ?>
+
             <p>
                 <label for="fcg-fundraising-goal"><strong>Fundraising Goal:</strong></label><br>
                 <span style="display: inline-flex; align-items: center;">

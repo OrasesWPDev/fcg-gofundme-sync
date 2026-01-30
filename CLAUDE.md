@@ -32,19 +32,34 @@ includes/
 
 Plugin reads credentials from environment variables (recommended) or wp-config.php constants:
 
-| Environment Variable | Description |
-|---------------------|-------------|
+| Constant | Description |
+|----------|-------------|
 | `GOFUNDME_CLIENT_ID` | OAuth2 Client ID from GoFundMe Pro |
 | `GOFUNDME_CLIENT_SECRET` | OAuth2 Client Secret from GoFundMe Pro |
 | `GOFUNDME_ORG_ID` | Organization ID from GoFundMe Pro |
+| `GOFUNDME_MASTER_CAMPAIGN_ID` | Master campaign containing all designations |
+| `GOFUNDME_MASTER_COMPONENT_ID` | Component ID for frontend embeds |
 
-**WP Engine Setup (Recommended):**
-1. Log into WP Engine User Portal
-2. Navigate to your environment (Staging or Production)
-3. Go to "Environment Variables" section
-4. Add each variable with the appropriate values for that environment
+**WP Engine Setup:**
+Traditional WP Engine hosting uses wp-config.php constants (NOT environment variables UI - that's only for Atlas/Headless).
 
-**Priority:** Environment variables take precedence over wp-config.php constants
+Use hostname detection in wp-config.php to support database copies between environments:
+
+```php
+if (strpos($_SERVER['HTTP_HOST'] ?? '', 'frederickc2stg') !== false) {
+    // STAGING
+    define('GOFUNDME_CLIENT_ID', 'sandbox_client_id');
+    // ... other staging constants
+} else {
+    // PRODUCTION
+    define('GOFUNDME_CLIENT_ID', 'prod_client_id');
+    // ... other production constants
+}
+```
+
+See `docs/environment-configuration.md` for complete setup instructions.
+
+**Priority:** wp-config.php constants take precedence over wp_options database values
 
 ## Architecture (v2.3.0+)
 

@@ -8,12 +8,12 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 7 (Frontend Embed)
-Plan: 2 of 2
-Status: **Phase complete**
-Last activity: 2026-01-29 — Classy developer call, roadmap updated
+Phase: 8 (Production Launch MVP)
+Plan: 1 of 3
+Status: **In progress**
+Last activity: 2026-01-29 — Completed 08-01 (admin donation totals display)
 
-Progress: [████████░░] 71% (5 of 7 phases complete)
+Progress: [████████░░] 76% (5 of 7 phases complete, 08-01 done)
 
 ## Classy Call Summary (2026-01-29)
 
@@ -47,7 +47,7 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 05 - Code Cleanup | Complete (2026-01-29) |
 | 06 - Master Campaign Integration | Complete (2026-01-29) |
 | 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
-| 08 - Production Launch (MVP) | Not started |
+| 08 - Production Launch (MVP) | **In progress** (08-01 complete) |
 | 09 - Modal & Theme Enhancements | Future |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
@@ -78,6 +78,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Disable modals due to Classy SDK incompatibility | 07-02 | SDK custom elements fail inside Bootstrap modals |
 | Direct fund page links instead of modals | 07-02 | Workaround provides working donation path with one extra click |
 | Keep modal code commented (not deleted) | 07-02 | Easy rollback if Classy fixes SDK in future |
+| Display donation section only when data exists | 08-01 | Prevents empty UI section for funds without donations |
+| Goal progress shown only with both goal and progress values | 08-01 | Avoids showing "0%" for funds without fundraising goals |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -100,20 +102,19 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed Phase 7 (Frontend Embed) with modal workaround
+Stopped at: Completed 08-01 (admin donation totals display)
 
-**Completed in Phase 7:**
-1. Deployed fund-form.php and archive-funds.php to staging
-2. Verified Classy embed works on single fund pages
-3. Discovered modal incompatibility (Classy SDK + Bootstrap modals)
-4. Implemented workaround: disabled modals, direct fund page links
+**Completed in 08-01:**
+1. Added donation totals display to admin meta box (donation total, donor count, goal progress, last inbound sync)
+2. Deployed plugin to staging
+3. Added test donation data to post 13854 for visual verification
 
 **Next steps:**
-1. Plan Phase 8 (Production Launch MVP)
-   - Admin meta box for designation info
-   - Test DELETE endpoint functionality
-   - Production deployment prep
-2. Phase 9 (Future): Modal enhancements and theme refactor
+1. 08-02: Delete sync verification (test DELETE endpoint on staging)
+2. 08-03: Production deployment planning and execution
+3. Phase 9 (Future): Modal enhancements and theme refactor
+
+**Staging verification URL:** `https://frederickc2stg.wpengine.com/wp-admin/post.php?post=13854&action=edit`
 
 Resume file: None
 

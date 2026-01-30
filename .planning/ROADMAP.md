@@ -16,10 +16,11 @@ This roadmap manages the WordPress plugin that synchronizes "funds" custom post 
 - [x] **Phase 5: Code Cleanup** - Remove obsolete campaign sync code
 - [x] **Phase 6: Master Campaign Integration** - Settings + link designations to default group
 - [x] **Phase 7: Frontend Embed** - Classy embed on single fund pages, modal removal on archive
+- [x] **Phase 8: Production Launch (MVP)** - Admin UI, delete sync, production deployment
+- [x] **Phase 9.1: Environment-Safe Configuration** - wp-config.php constants with hostname detection
 
 **Upcoming:**
-- [ ] **Phase 8: Production Launch (MVP)** - Admin UI, delete sync, production deployment
-- [ ] **Phase 9: Modal & Theme Enhancements** - Classy button links, fund-modal.php fix, theme refactor
+- [ ] **Phase 9.2: Modal & Theme Enhancements** - Classy button links, fund-modal.php fix, theme refactor
 
 ## Phase Details
 
@@ -162,9 +163,32 @@ Plans:
 
 ---
 
-### Phase 9: Modal & Theme Enhancements (Post-MVP)
-**Goal**: Restore modal functionality using Classy button links, consolidate theme files
+### Phase 9.1: Environment-Safe Configuration (COMPLETE)
+**Goal**: Enable environment-specific credentials via wp-config.php constants with hostname detection
 **Depends on**: Phase 8 (production stable)
+**Status**: Complete (2026-01-30)
+**Plans:** 1 plan
+
+Plans:
+- [x] 09-01-PLAN.md — Add constant support for master campaign/component IDs, update admin UI
+
+**Results:**
+- Added `GOFUNDME_MASTER_CAMPAIGN_ID` and `GOFUNDME_MASTER_COMPONENT_ID` constant support
+- Admin UI shows read-only configuration when constants defined
+- Hostname-based credential switching documented for WP Engine
+- Database copy protection: credentials in wp-config.php, not wp_options
+
+**Documentation:**
+- `docs/environment-configuration.md` - Complete wp-config.php setup guide
+
+**Manual Work Required:**
+- Configure wp-config.php on staging and production with hostname detection block
+
+---
+
+### Phase 9.2: Modal & Theme Enhancements (Post-MVP)
+**Goal**: Restore modal functionality using Classy button links, consolidate theme files
+**Depends on**: Phase 9.1 (environment-safe config)
 **Status**: Future
 
 **Background (from Classy call 2026-01-29):**
@@ -201,7 +225,8 @@ Luke Dringoli recommended using Classy's "button link" version instead of Bootst
 | 6. Master Campaign Integration | Complete | 2026-01-29 |
 | 7. Frontend Embed | Complete | 2026-01-29 |
 | 8. Production Launch (MVP) | Complete | 2026-01-30 |
-| 9. Modal & Theme Enhancements | Future | - |
+| 9.1. Environment-Safe Configuration | Complete | 2026-01-30 |
+| 9.2. Modal & Theme Enhancements | Future | - |
 
 ---
 
@@ -233,11 +258,13 @@ Classy embed renders with fund pre-selected
 | 8 | Create master campaign in Production Classy account | Done (764752) |
 | 8 | Generate Production API credentials | Done |
 | 8 | Get Master Component ID from production campaign | Done (CngmDfcvOorpIS4KOTO4H) |
-| 8 | Set WP Engine environment variables | Pending |
+| 8 | ~~Set WP Engine environment variables~~ | Replaced by wp-config.php constants (Phase 9.1) |
 | 8 | Deploy plugin v2.3.0 to production | Pending |
 | 8 | Deploy theme files to production (rsync) | Pending |
 | 8 | Configure production plugin settings | Pending |
-| 9 | Update remaining templates (search, taxonomy, flexible) | Future |
+| 9.1 | Configure wp-config.php on staging | Done (2026-01-30) |
+| 9.1 | Configure wp-config.php on production | Pending |
+| 9.2 | Update remaining templates (search, taxonomy, flexible) | Future |
 
 ## Classy Developer Call Notes (2026-01-29)
 
@@ -272,4 +299,4 @@ Classy embed renders with fund pre-selected
 
 ---
 
-*Last updated: 2026-01-30*
+*Last updated: 2026-01-30 (Phase 9.1 complete)*

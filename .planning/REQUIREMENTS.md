@@ -1,7 +1,7 @@
 # Requirements: FCG GoFundMe Pro Sync
 
 **Defined:** 2026-01-22
-**Updated:** 2026-01-29 (Phases 5-7 complete)
+**Updated:** 2026-01-30 (All v1 requirements complete)
 **Core Value:** When a fund is published in WordPress, the designation is automatically created in Classy and linked to the master campaign — no manual data entry required.
 
 ## v1 Requirements
@@ -37,10 +37,10 @@ Requirements for single master campaign architecture. Each maps to roadmap phase
 
 ### Admin UI (Optional)
 
-- [ ] **ADMN-01**: Designation ID displayed in fund edit meta box
-- [ ] **ADMN-02**: Donation total displayed in fund edit meta box (from inbound sync)
-- [ ] **ADMN-03**: Last sync timestamp displayed
-- [ ] **ADMN-04**: Manual "Sync Now" button for individual fund
+- [x] **ADMN-01**: Designation ID displayed in fund edit meta box
+- [x] **ADMN-02**: Donation total displayed in fund edit meta box (from inbound sync)
+- [x] **ADMN-03**: Last sync timestamp displayed
+- [x] **ADMN-04**: Manual "Sync Now" button for individual fund
 
 ### Frontend Embed Integration
 
@@ -114,16 +114,16 @@ Which phases cover which requirements. Updated after architecture pivot.
 | EMBD-02 | Phase 7 | Complete |
 | EMBD-03 | Phase 7 | Complete (with modal workaround) |
 | EMBD-04 | Phase 7 | Complete |
-| ADMN-01 | Phase 8 | Pending |
-| ADMN-02 | Phase 8 | Pending |
-| ADMN-03 | Phase 8 | Pending |
-| ADMN-04 | Phase 8 | Pending |
+| ADMN-01 | Phase 8 | Complete |
+| ADMN-02 | Phase 8 | Complete |
+| ADMN-03 | Phase 8 | Complete |
+| ADMN-04 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total (post-pivot)
 - Mapped to phases: 23
-- Unmapped: 0 ✓
+- Complete: 23 ✓
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-28 after architecture pivot*
+*Last updated: 2026-01-30 (Phase 8 complete)*

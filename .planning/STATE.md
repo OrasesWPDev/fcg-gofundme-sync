@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 Phase: 9.1 (Environment-Safe Configuration)
 Plan: 1 of 1
-Status: **Planned** 📋
-Last activity: 2026-01-30 — Phase 9.1 planned
+Status: **Complete**
+Last activity: 2026-01-30 — Completed 09-01-PLAN.md
 
-Progress: [█████████░] 85% (6 of 7 phases complete)
+Progress: [██████████] 100% (7 of 7 phases complete)
 
 ## Classy Call Summary (2026-01-29)
 
 Met with Luke Dringoli and Jon Bierma from Classy. Key outcomes:
-- ✅ Architecture validated
-- ✅ DELETE endpoint confirmed (removes from campaign + designations)
-- ✅ Modal workaround (direct links) confirmed appropriate
-- 📋 Roadmap updated: Phase 8 = MVP (admin UI + production), Phase 9 = modal/theme enhancements
+- Architecture validated
+- DELETE endpoint confirmed (removes from campaign + designations)
+- Modal workaround (direct links) confirmed appropriate
+- Roadmap updated: Phase 8 = MVP (admin UI + production), Phase 9 = modal/theme enhancements
 
 ## Architecture Pivot Summary (2026-01-28)
 
@@ -30,11 +30,11 @@ Classy confirmed single master campaign approach:
 - `PUT /campaigns/{id}` with `{"designation_id": "{id}"}` links designation to campaign
 
 **Result:** Old campaign sync code is now obsolete. New roadmap:
-- ~~Phase 5: Code Cleanup~~ ✅ Complete
-- ~~Phase 6: Master Campaign Integration~~ ✅ Complete
-- ~~Phase 7: Frontend Embed~~ ✅ Complete (with modal workaround)
-- ~~Phase 8: Production Launch (MVP)~~ ✅ Complete
-- **Phase 9.1: Environment-Safe Configuration** 📋 Planned
+- ~~Phase 5: Code Cleanup~~ Complete
+- ~~Phase 6: Master Campaign Integration~~ Complete
+- ~~Phase 7: Frontend Embed~~ Complete (with modal workaround)
+- ~~Phase 8: Production Launch (MVP)~~ Complete
+- ~~Phase 9.1: Environment-Safe Configuration~~ **Complete**
 - Phase 9.2: Modal & Theme Enhancements (future)
 
 See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
@@ -47,9 +47,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 04 - Inbound Sync | Complete |
 | 05 - Code Cleanup | Complete (2026-01-29) |
 | 06 - Master Campaign Integration | Complete (2026-01-29) |
-| 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
-| 08 - Production Launch (MVP) | **Complete** (2026-01-30) ✅ |
-| 09.1 - Environment-Safe Configuration | **Planned** 📋 |
+| 07 - Frontend Embed | Complete (2026-01-29) |
+| 08 - Production Launch (MVP) | Complete (2026-01-30) |
+| 09.1 - Environment-Safe Configuration | **Complete** (2026-01-30) |
 | 09.2 - Modal & Theme Enhancements | Future |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
@@ -88,6 +88,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | **Hostname-based credential switching in wp-config.php** | 09-01 | Both staging and production creds in same file; hostname detection selects correct set |
 | WP Engine has NO environment variables for traditional WordPress | 09-01 | Only Atlas/Headless has env vars UI; traditional hosting uses wp-config.php constants |
 | Admin UI shows read-only IDs when constants defined | 09-01 | Simplifies UI, prevents accidental misconfiguration |
+| **Constants take priority over wp_options** | 09-01 | GOFUNDME_MASTER_CAMPAIGN_ID and GOFUNDME_MASTER_COMPONENT_ID read from constants first |
+| **Polling settings excluded from constants** | 09-01 | Interval and enabled still saved to wp_options (not environment-specific) |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -100,12 +102,11 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 0 todos pending
 
-- ~~**Environment-safe credential management**~~ → Addressed by Phase 9.1
-
 ### Pending Manual Work
 
-- ~~Create master campaign in Classy UI~~ ✅ Done (Campaign 764694)
+- ~~Create master campaign in Classy UI~~ Done (Campaign 764694)
 - Enable Alternate Cron on WP Engine Production (before go-live)
+- **Configure wp-config.php with hostname-based credentials** (see docs/environment-configuration.md)
 
 ### Blockers/Concerns
 
@@ -116,25 +117,23 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Phase 8 complete and verified
+Stopped at: Completed Phase 9.1 (09-01-PLAN.md)
 
-**Phase 8 Complete:**
-- 08-01: Admin meta box donation totals display ✅
-- 08-02: DELETE sync verification + deployment checklist ✅
-- 08-03: Fixed sync status column to show "Synced" ✅
-- Verification: 7/7 must-haves passed
+**Phase 9.1 Complete:**
+- 09-01: Environment-Safe Configuration
+- 5 tasks completed in 3 minutes
+- 4 commits: cd013e5, dbb76bc, b8f2697, f7ba46f
 
 **Key outcomes:**
-1. Admin can see donation totals in fund edit screen
-2. DELETE permanently removes designation from Classy
-3. Sync status column correctly shows "Synced" for linked funds
-4. Production deployment checklist documented
+1. Constants GOFUNDME_MASTER_CAMPAIGN_ID and GOFUNDME_MASTER_COMPONENT_ID now supported
+2. Admin UI shows read-only configuration when constants defined
+3. Save logic skips wp_options when constants take priority
+4. Comprehensive documentation in docs/environment-configuration.md
 
 **Next steps:**
-1. Deploy to production (user task - see docs/production-deployment-checklist.md)
-2. Phase 9 (Future): Modal enhancements and theme refactor
-
-**Staging verification URL:** `https://frederickc2stg.wpengine.com/wp-admin/post.php?post=13854&action=edit`
+1. Configure wp-config.php on staging and production (user task)
+2. Deploy plugin to staging for verification
+3. Phase 9.2 (Future): Modal & theme enhancements
 
 Resume file: None
 
@@ -142,7 +141,7 @@ Resume file: None
 
 - **Test Fund:** "Phase 6 Test Fund - DELETE ME" (post ID 13854)
 - **Designation ID:** 1896370
-- **Classy Verification:** ✅ Designation appears in campaign 764694's Default Active Group
+- **Classy Verification:** Designation appears in campaign 764694's Default Active Group
 - **Active Group Count:** 862 designations (857 + test + 5 pending linked)
 - **API Confirmation:** `update_campaign()` with `designation_id` adds to active group
 - **5 Pending Designations:** Linked via script (13826, 13795, 13782, 13781, 13758)
@@ -160,12 +159,12 @@ Resume file: None
 - Error: `Failed to construct 'HTMLElement': Illegal constructor`
 - Payment flow breaks when Classy tries to open its internal modal
 - **Workaround:** Disabled archive page modals, use direct fund page links
-- **Status:** ✅ Workaround validated by Classy (call 2026-01-29)
-- **Future fix (Phase 9):** Use Classy "button link" version instead of Bootstrap modal
+- **Status:** Workaround validated by Classy (call 2026-01-29)
+- **Future fix (Phase 9.2):** Use Classy "button link" version instead of Bootstrap modal
 - **Clarification:** Designation ID persistence is only an issue with fund-modal.php (lacks post context); single fund page (fund-form.php) works correctly via URL injection
 
 **Theme File Deployment (Phase 7):**
 - Theme files (fund-form.php, archive-funds.php) are separate from plugin deployment
-- **Staging:** ✅ Deployed and tested
+- **Staging:** Deployed and tested
 - **Production:** Pending (deploy with plugin v2.3.0 go-live)
 - See docs/theme-fund-form-embed.md for deployment instructions

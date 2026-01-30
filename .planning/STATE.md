@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 8 (Production Launch MVP)
-Plan: 1 of 3
+Plan: 2 of 3
 Status: **In progress**
-Last activity: 2026-01-29 — Completed 08-01 (admin donation totals display)
+Last activity: 2026-01-30 — Completed 08-02 (DELETE sync verification)
 
-Progress: [████████░░] 76% (5 of 7 phases complete, 08-01 done)
+Progress: [████████░░] 80% (5 of 7 phases complete, 08-01 + 08-02 done)
 
 ## Classy Call Summary (2026-01-29)
 
@@ -47,7 +47,7 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 05 - Code Cleanup | Complete (2026-01-29) |
 | 06 - Master Campaign Integration | Complete (2026-01-29) |
 | 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
-| 08 - Production Launch (MVP) | **In progress** (08-01 complete) |
+| 08 - Production Launch (MVP) | **In progress** (08-01, 08-02 complete) |
 | 09 - Modal & Theme Enhancements | Future |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
@@ -80,6 +80,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Keep modal code commented (not deleted) | 07-02 | Easy rollback if Classy fixes SDK in future |
 | Display donation section only when data exists | 08-01 | Prevents empty UI section for funds without donations |
 | Goal progress shown only with both goal and progress values | 08-01 | Avoids showing "0%" for funds without fundraising goals |
+| DELETE removes designation entirely (not just deactivate) | 08-02 | Permanent delete returns 404 from Classy API |
+| Default designation cannot be deleted | 08-02 | Must change default in Classy before deleting that designation |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -101,18 +103,20 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 ## Session Continuity
 
-Last session: 2026-01-29
-Stopped at: Completed 08-01 (admin donation totals display)
+Last session: 2026-01-30
+Stopped at: Completed 08-02 (DELETE sync verification)
 
-**Completed in 08-01:**
-1. Added donation totals display to admin meta box (donation total, donor count, goal progress, last inbound sync)
-2. Deployed plugin to staging
-3. Added test donation data to post 13854 for visual verification
+**Completed in 08-02:**
+1. Created test fund on staging (post 13855, designation 1896404)
+2. Verified trash behavior: designation deactivated (is_active: false)
+3. Verified restore behavior: designation reactivated (is_active: true)
+4. Verified permanent delete: designation removed from Classy (404 response)
+5. Human verified admin UI shows donation totals correctly
+6. Updated deployment checklist with verification evidence
 
 **Next steps:**
-1. 08-02: Delete sync verification (test DELETE endpoint on staging)
-2. 08-03: Production deployment planning and execution
-3. Phase 9 (Future): Modal enhancements and theme refactor
+1. 08-03: Production deployment planning and execution
+2. Phase 9 (Future): Modal enhancements and theme refactor
 
 **Staging verification URL:** `https://frederickc2stg.wpengine.com/wp-admin/post.php?post=13854&action=edit`
 

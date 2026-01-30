@@ -32,14 +32,14 @@ This document outlines the steps to deploy the FCG GoFundMe Pro Sync plugin to t
 
 ## Credentials Configuration
 
-### Local Credentials Reference
+### Credentials Storage
 
-All credentials are stored locally (gitignored) at:
-```
-.env.credentials
-```
+**NEVER commit credentials to this repository.**
 
-This file contains values for both staging and production, plus ready-to-copy wp-config.php blocks.
+Credentials should be:
+1. Stored in WP Engine User Portal → Environment Variables (recommended)
+2. Or added to wp-config.php directly on the server
+3. Optionally kept in a local `.env.credentials` file (gitignored) for reference
 
 ### Option 1: wp-config.php (Recommended for WP Engine)
 
@@ -47,8 +47,8 @@ SSH into production and edit wp-config.php. Add below the `# WP Engine Settings`
 
 ```php
 // FCG GoFundMe Pro Sync - Classy Production Credentials
-define('GOFUNDME_CLIENT_ID', 'REDACTED_CLIENT_ID');
-define('GOFUNDME_CLIENT_SECRET', 'REDACTED_CLIENT_SECRET');
+define('GOFUNDME_CLIENT_ID', 'your-client-id-here');
+define('GOFUNDME_CLIENT_SECRET', 'your-client-secret-here');
 define('GOFUNDME_ORG_ID', '104060');
 ```
 
@@ -61,8 +61,8 @@ define('GOFUNDME_ORG_ID', '104060');
 
 | Variable | Value |
 |----------|-------|
-| `GOFUNDME_CLIENT_ID` | `REDACTED_CLIENT_ID` |
-| `GOFUNDME_CLIENT_SECRET` | `REDACTED_CLIENT_SECRET` |
+| `GOFUNDME_CLIENT_ID` | *(from Classy API settings)* |
+| `GOFUNDME_CLIENT_SECRET` | *(from Classy API settings)* |
 | `GOFUNDME_ORG_ID` | `104060` |
 
 **Note:** Environment variables take precedence over wp-config.php constants.

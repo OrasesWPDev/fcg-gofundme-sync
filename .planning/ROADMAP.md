@@ -113,22 +113,27 @@ Plans:
 - `docs/client-fund-page-changes.md` - Client explanation
 
 **Success Criteria (Revised):**
-1. ✅ Single fund page displays Classy donation embed
-2. ✅ Correct fund is pre-selected in designation dropdown
-3. ⚠️ Modal popup removed (SDK limitation) - direct links used instead
+1. Single fund page displays Classy donation embed
+2. Correct fund is pre-selected in designation dropdown
+3. Modal popup removed (SDK limitation) - direct links used instead
 
 ---
 
 ### Phase 8: Production Launch (MVP)
 **Goal**: Complete admin UI, verify delete sync, plan production deployment
 **Depends on**: Phase 7
-**Status**: Not started
+**Status**: Planned
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 08-01-PLAN.md — Add donation totals display to admin meta box (ADMN-02)
+- [ ] 08-02-PLAN.md — Verify DELETE sync + finalize deployment checklist
 
 **Scope:**
-- Admin meta box showing designation ID (clickable link to Classy)
-- Donation totals display (from inbound sync)
-- Last sync timestamp
-- Manual "Sync Now" button
+- Admin meta box showing designation ID (clickable link to Classy) - ALREADY EXISTS
+- Donation totals display (from inbound sync) - NEEDS IMPLEMENTATION
+- Last sync timestamp - ALREADY EXISTS
+- Manual "Sync Now" button - ALREADY EXISTS
 - Test DELETE endpoint on staging (verify designation removal from campaign + designations list)
 - **Production deployment planning** (checklist, credential configuration guide)
 
@@ -143,8 +148,8 @@ Plans:
 - Theme PHP file consolidation
 
 **Success Criteria:**
-1. Admin can see designation info in fund edit screen
-2. Delete a fund on staging → designation removed from Classy entirely
+1. Admin can see designation info + donation totals in fund edit screen
+2. Delete a fund on staging -> designation removed from Classy entirely
 3. Production deployment checklist documented
 4. Staging fully tested before production go-live
 
@@ -188,7 +193,7 @@ Luke Dringoli recommended using Classy's "button link" version instead of Bootst
 | 5. Code Cleanup | Complete | 2026-01-29 |
 | 6. Master Campaign Integration | Complete | 2026-01-29 |
 | 7. Frontend Embed | Complete | 2026-01-29 |
-| 8. Production Launch (MVP) | Not started | - |
+| 8. Production Launch (MVP) | Planned | - |
 | 9. Modal & Theme Enhancements | Future | - |
 
 ---
@@ -197,13 +202,13 @@ Luke Dringoli recommended using Classy's "button link" version instead of Bootst
 
 ```
 WordPress Fund
-    ↓ (on publish)
+    | (on publish)
 Designation created via API
-    ↓ (Phase 6)
+    | (Phase 6)
 Designation linked to Master Campaign
-    ↓ (Phase 7)
+    | (Phase 7)
 Frontend: <div classy="{master_id}"> + ?designation={id}
-    ↓
+    |
 Classy embed renders with fund pre-selected
 ```
 

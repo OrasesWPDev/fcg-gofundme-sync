@@ -11,9 +11,17 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 7 (Frontend Embed)
 Plan: 2 of 2
 Status: **Phase complete**
-Last activity: 2026-01-29 — Completed 07-02-PLAN.md (staging verification)
+Last activity: 2026-01-29 — Classy developer call, roadmap updated
 
-Progress: [████████░░] 83% (5 of 6 phases complete)
+Progress: [████████░░] 71% (5 of 7 phases complete)
+
+## Classy Call Summary (2026-01-29)
+
+Met with Luke Dringoli and Jon Bierma from Classy. Key outcomes:
+- ✅ Architecture validated
+- ✅ DELETE endpoint confirmed (removes from campaign + designations)
+- ✅ Modal workaround (direct links) confirmed appropriate
+- 📋 Roadmap updated: Phase 8 = MVP (admin UI + production), Phase 9 = modal/theme enhancements
 
 ## Architecture Pivot Summary (2026-01-28)
 
@@ -25,7 +33,8 @@ Classy confirmed single master campaign approach:
 - ~~Phase 5: Code Cleanup~~ ✅ Complete
 - ~~Phase 6: Master Campaign Integration~~ ✅ Complete
 - ~~Phase 7: Frontend Embed~~ ✅ Complete (with modal workaround)
-- Phase 8: Admin UI (optional)
+- Phase 8: Production Launch (MVP) - admin UI, delete sync, deployment planning
+- Phase 9: Modal & Theme Enhancements (future)
 
 See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
@@ -38,7 +47,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 05 - Code Cleanup | Complete (2026-01-29) |
 | 06 - Master Campaign Integration | Complete (2026-01-29) |
 | 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
-| 08 - Admin UI | Not started |
+| 08 - Production Launch (MVP) | Not started |
+| 09 - Modal & Theme Enhancements | Future |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
 
@@ -99,9 +109,11 @@ Stopped at: Completed Phase 7 (Frontend Embed) with modal workaround
 4. Implemented workaround: disabled modals, direct fund page links
 
 **Next steps:**
-1. Plan Phase 8 (Admin UI) if desired
-2. Deploy theme files to production when ready
-3. Update remaining templates (search.php, taxonomy-fund-category.php, template-flexible.php)
+1. Plan Phase 8 (Production Launch MVP)
+   - Admin meta box for designation info
+   - Test DELETE endpoint functionality
+   - Production deployment prep
+2. Phase 9 (Future): Modal enhancements and theme refactor
 
 Resume file: None
 
@@ -127,8 +139,9 @@ Resume file: None
 - Error: `Failed to construct 'HTMLElement': Illegal constructor`
 - Payment flow breaks when Classy tries to open its internal modal
 - **Workaround:** Disabled archive page modals, use direct fund page links
-- **Status:** Workaround deployed to staging; Classy meeting scheduled to discuss alternatives
-- See: docs/classy-technical-questions.md for meeting prep
+- **Status:** ✅ Workaround validated by Classy (call 2026-01-29)
+- **Future fix (Phase 9):** Use Classy "button link" version instead of Bootstrap modal
+- **Clarification:** Designation ID persistence is only an issue with fund-modal.php (lacks post context); single fund page (fund-form.php) works correctly via URL injection
 
 **Theme File Deployment (Phase 7):**
 - Theme files (fund-form.php, archive-funds.php) are separate from plugin deployment

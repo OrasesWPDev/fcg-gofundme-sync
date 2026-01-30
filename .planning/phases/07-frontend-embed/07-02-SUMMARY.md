@@ -174,7 +174,29 @@ These are documented in `docs/theme-fund-form-embed.md` for future deployment.
 **Known Issue: Modal Incompatibility**
 - **Severity:** Medium (workaround exists)
 - **Status:** Documented, workaround deployed
-- **Next Steps:** Discuss with Classy for potential SDK fix
+- **Next Steps:** ~~Discuss with Classy for potential SDK fix~~ Discussed (see below)
+
+## Classy Developer Call (2026-01-29)
+
+**Attendees:** Chad Diaz, Luke Dringoli (Classy), Jon Bierma (Classy)
+
+**Key Confirmations:**
+- ✅ Architecture (single master campaign + designations) validated as correct approach
+- ✅ Direct fund page links workaround is appropriate solution for modal issue
+- ✅ DELETE endpoint removes designation from campaign list AND designations entirely
+- ✅ Deactivate (PUT with `is_active: false`) leaves designation in campaign list
+
+**Classy Feedback on Designation ID Persistence:**
+Jon emphasized that designation ID must persist through all donation entry points. This concern is **specific to the modal** (fund-modal.php) which lacks post context when triggered from archive pages.
+
+**Single fund page (fund-form.php):** No persistence issue — JavaScript injects `?designation={id}` on page load with full post context available.
+
+**Luke's Recommendations for Future:**
+1. Use Classy "button link" version for quick donate (opens Classy modal directly, skips Bootstrap)
+2. Theme refactor to consolidate PHP templates into custom post type
+3. These are deferred to Phase 8.2 (post-MVP)
+
+**Call Recording:** Available in tldv (meeting ID: 697bcdc55095a70013422fd8)
 
 ## Next Phase Readiness
 

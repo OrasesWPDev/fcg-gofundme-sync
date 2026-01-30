@@ -18,7 +18,8 @@ This roadmap manages the WordPress plugin that synchronizes "funds" custom post 
 - [x] **Phase 7: Frontend Embed** - Classy embed on single fund pages, modal removal on archive
 
 **Upcoming:**
-- [ ] **Phase 8: Admin UI** - Display designation and donation info (optional)
+- [ ] **Phase 8: Production Launch (MVP)** - Admin UI, delete sync, production deployment
+- [ ] **Phase 9: Modal & Theme Enhancements** - Classy button links, fund-modal.php fix, theme refactor
 
 ## Phase Details
 
@@ -118,15 +119,63 @@ Plans:
 
 ---
 
-### Phase 8: Admin UI (Optional)
-**Goal**: Display designation and donation info in WordPress admin
-**Depends on**: Phases 6-7
+### Phase 8: Production Launch (MVP)
+**Goal**: Complete admin UI, verify delete sync, plan production deployment
+**Depends on**: Phase 7
+**Status**: Not started
 
 **Scope:**
-- Designation ID in fund edit meta box
-- Donation totals (from inbound sync)
+- Admin meta box showing designation ID (clickable link to Classy)
+- Donation totals display (from inbound sync)
 - Last sync timestamp
 - Manual "Sync Now" button
+- Test DELETE endpoint on staging (verify designation removal from campaign + designations list)
+- **Production deployment planning** (checklist, credential configuration guide)
+
+**Production Deployment (planning only - execution by user):**
+- See: `docs/production-deployment-checklist.md`
+- Credentials configured via WP Engine environment variables (not stored in repo)
+- Theme files deployed via rsync
+
+**Exclusions (deferred to Phase 9):**
+- Modal popup functionality (fund-modal.php)
+- Archive page quick-donate buttons
+- Theme PHP file consolidation
+
+**Success Criteria:**
+1. Admin can see designation info in fund edit screen
+2. Delete a fund on staging → designation removed from Classy entirely
+3. Production deployment checklist documented
+4. Staging fully tested before production go-live
+
+---
+
+### Phase 9: Modal & Theme Enhancements (Post-MVP)
+**Goal**: Restore modal functionality using Classy button links, consolidate theme files
+**Depends on**: Phase 8 (production stable)
+**Status**: Future
+
+**Background (from Classy call 2026-01-29):**
+Luke Dringoli recommended using Classy's "button link" version instead of Bootstrap modals. This opens the Classy donation modal directly without an intermediate modal. Jon Bierma noted designation ID persistence is only an issue with the modal (fund-modal.php) since it lacks post context.
+
+**Scope:**
+- Implement Classy button link for archive page "Give Now"
+- Refactor fund-modal.php to pass designation ID correctly
+- Update remaining templates (search.php, taxonomy-fund-category.php, template-flexible.php)
+- Theme consolidation: merge fund-form.php and fund-modal.php logic into single-funds.php template
+- Remove scattered PHP template files
+
+**Files Affected:**
+- `fund-modal.php` - Currently disabled, needs Classy button link implementation
+- `archive-funds.php` - Re-enable modal triggers with new approach
+- `search.php` (~line 203) - Modal removal/update
+- `taxonomy-fund-category.php` (~line 44) - Modal removal/update
+- `template-flexible.php` (~line 964) - Modal removal/update
+
+**Classy Recommendations:**
+- Use Classy button link: `<a class="classy-give-button" data-campaign="{id}" data-designation="{id}">Give Now</a>`
+- Opens Classy modal directly, bypasses Bootstrap modal entirely
+- Requires SDK initialization on page
 
 ---
 
@@ -139,7 +188,8 @@ Plans:
 | 5. Code Cleanup | Complete | 2026-01-29 |
 | 6. Master Campaign Integration | Complete | 2026-01-29 |
 | 7. Frontend Embed | Complete | 2026-01-29 |
-| 8. Admin UI | Not started | - |
+| 8. Production Launch (MVP) | Not started | - |
+| 9. Modal & Theme Enhancements | Future | - |
 
 ---
 
@@ -166,10 +216,47 @@ Classy embed renders with fund pre-selected
 | 6 | Create master campaign in Classy UI | Done (764694) |
 | 6 | Note campaign ID and component ID | Done (mKAgOmLtRHVGFGh_eaqM6) |
 | 6 | Research Classy API for adding to group | Done (Luke confirmed approach) |
-| 4 | Enable Alternate Cron on WP Engine Production | Pending |
-| 7 | Deploy theme files to production (SFTP) | Pending |
-| 7 | Meet with Classy re: modal compatibility | Scheduled (2026-01-29 4pm) |
-| 7 | Update remaining templates (search, taxonomy, flexible) | Pending |
+| 7 | Meet with Classy re: modal compatibility | Done (2026-01-29) - workaround confirmed |
+| 4 | Enable Alternate Cron on WP Engine Production | Pending (Phase 8) |
+| 8 | Create master campaign in Production Classy account | Done (764752) |
+| 8 | Generate Production API credentials | Done |
+| 8 | Get Master Component ID from production campaign | Done (CngmDfcvOorpIS4KOTO4H) |
+| 8 | Set WP Engine environment variables | Pending |
+| 8 | Deploy plugin v2.3.0 to production | Pending |
+| 8 | Deploy theme files to production (rsync) | Pending |
+| 8 | Configure production plugin settings | Pending |
+| 9 | Update remaining templates (search, taxonomy, flexible) | Future |
+
+## Classy Developer Call Notes (2026-01-29)
+
+**Attendees:** Chad Diaz, Luke Dringoli, Jon Bierma (GoFundMe/Classy)
+
+**Key Confirmations:**
+- Architecture validated (single master campaign + designations)
+- DELETE endpoint removes designation from campaign list AND designations entirely
+- Deactivate (PUT `is_active: false`) leaves designation in campaign list but inactive
+- Direct fund page links workaround is appropriate for modal limitation
+
+**Recommendations for Phase 9:**
+- Use Classy "button link" for quick donate (bypasses Bootstrap modal)
+- Theme consolidation to simplify designation ID handling
+
+**Recording:** tldv meeting ID 697bcdc55095a70013422fd8
+
+## Production Environment Reference
+
+| Item | Value |
+|------|-------|
+| SSH | `frederickcount@frederickcount.ssh.wpengine.net` |
+| Org ID | `104060` |
+| Master Campaign ID | `764752` |
+| Component ID | `CngmDfcvOorpIS4KOTO4H` |
+
+**Full deployment checklist:** `docs/production-deployment-checklist.md`
+
+**Credentials:**
+- Local reference: `.env.credentials` (gitignored, contains both staging and production)
+- Configured via WP Engine environment variables
 
 ---
 

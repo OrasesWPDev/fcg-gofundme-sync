@@ -250,7 +250,7 @@ class FCG_GFM_Admin_UI {
         register_setting('fcg_gfm_sync', 'fcg_gofundme_master_component_id', [
             'type' => 'string',
             'default' => '',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => [$this, 'validate_master_component_id'],
         ]);
         register_setting('fcg_gfm_sync', 'fcg_gfm_poll_enabled', [
             'type' => 'boolean',
@@ -269,6 +269,11 @@ class FCG_GFM_Admin_UI {
      * @return int Validated campaign ID or previous value on error
      */
     public function validate_master_campaign_id($input): int {
+        // Skip validation if using constants - return constant value
+        if (defined('GOFUNDME_MASTER_CAMPAIGN_ID') && GOFUNDME_MASTER_CAMPAIGN_ID) {
+            return (int) GOFUNDME_MASTER_CAMPAIGN_ID;
+        }
+
         $input = intval($input);
 
         // Allow clearing the setting
@@ -346,6 +351,21 @@ class FCG_GFM_Admin_UI {
     }
 
     /**
+     * Validate master component ID
+     *
+     * @param mixed $input Input value
+     * @return string Validated component ID or constant value
+     */
+    public function validate_master_component_id($input): string {
+        // Skip validation/save if using constants - return constant value
+        if (defined('GOFUNDME_MASTER_COMPONENT_ID') && GOFUNDME_MASTER_COMPONENT_ID) {
+            return (string) GOFUNDME_MASTER_COMPONENT_ID;
+        }
+
+        return sanitize_text_field($input);
+    }
+
+    /**
      * Render settings page
      */
     public function render_settings_page(): void {
@@ -358,12 +378,13 @@ class FCG_GFM_Admin_UI {
         $last_poll = get_option('fcg_gfm_last_poll');
         $conflicts = get_option('fcg_gfm_conflict_log', []);
 
-        // Master campaign settings
+        // Master campaign settings - use constant-aware methods
         $api = new FCG_GFM_API_Client();
         $api_configured = $api->is_configured();
-        $master_id = get_option('fcg_gofundme_master_campaign_id', 0);
+        $config_from_constants = $this->is_config_from_constants();
+        $master_id = $this->get_master_campaign_id();
         $master_name = get_option('fcg_gofundme_master_campaign_name', '');
-        $master_component_id = get_option('fcg_gofundme_master_component_id', '');
+        $master_component_id = $this->get_master_component_id();
         $validation_failed = get_option('fcg_gofundme_master_validation_failed', false);
         $validation_pending = get_option('fcg_gofundme_master_validation_pending', false);
         ?>
@@ -395,6 +416,38 @@ class FCG_GFM_Admin_UI {
             <form method="post" action="options.php">
                 <?php settings_fields('fcg_gfm_sync'); ?>
 
+                <?php if ($config_from_constants): ?>
+                <!-- Configuration from wp-config.php (read-only) -->
+                <h2>Configuration (from wp-config.php)</h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Master Campaign ID</th>
+                        <td>
+                            <code style="font-size: 14px;"><?php echo esc_html($master_id); ?></code>
+                            <?php if ($master_name): ?>
+                                <span style="color: #46b450; margin-left: 8px;">
+                                    <span class="dashicons dashicons-yes"></span>
+                                    <?php echo esc_html($master_name); ?>
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Master Component ID</th>
+                        <td>
+                            <code style="font-size: 14px;"><?php echo esc_html($master_component_id ?: '(not set)'); ?></code>
+                        </td>
+                    </tr>
+                </table>
+                <p class="description" style="margin-top: 10px;">
+                    <span class="dashicons dashicons-info"></span>
+                    Configured in wp-config.php. Contact developer to modify.
+                </p>
+                <hr style="margin: 20px 0;">
+                <h2>Polling Settings</h2>
+                <table class="form-table">
+                <?php else: ?>
+                <!-- Configuration via admin UI (editable) -->
                 <table class="form-table">
                     <tr>
                         <th scope="row">Master Campaign ID</th>
@@ -433,6 +486,7 @@ class FCG_GFM_Admin_UI {
                             </p>
                         </td>
                     </tr>
+                <?php endif; ?>
                     <tr>
                         <th scope="row">Auto-Polling</th>
                         <td>

@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 8 (Production Launch MVP)
-Plan: 2 of 3
-Status: **In progress**
-Last activity: 2026-01-30 — Completed 08-02 (DELETE sync verification)
+Plan: 3 of 3
+Status: **Complete** ✅
+Last activity: 2026-01-30 — Phase 8 verified (7/7 must-haves passed)
 
-Progress: [████████░░] 80% (5 of 7 phases complete, 08-01 + 08-02 done)
+Progress: [█████████░] 85% (6 of 7 phases complete)
 
 ## Classy Call Summary (2026-01-29)
 
@@ -33,7 +33,7 @@ Classy confirmed single master campaign approach:
 - ~~Phase 5: Code Cleanup~~ ✅ Complete
 - ~~Phase 6: Master Campaign Integration~~ ✅ Complete
 - ~~Phase 7: Frontend Embed~~ ✅ Complete (with modal workaround)
-- Phase 8: Production Launch (MVP) - admin UI, delete sync, deployment planning
+- ~~Phase 8: Production Launch (MVP)~~ ✅ Complete
 - Phase 9: Modal & Theme Enhancements (future)
 
 See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
@@ -47,7 +47,7 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 05 - Code Cleanup | Complete (2026-01-29) |
 | 06 - Master Campaign Integration | Complete (2026-01-29) |
 | 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
-| 08 - Production Launch (MVP) | **In progress** (08-01, 08-02 complete) |
+| 08 - Production Launch (MVP) | **Complete** (2026-01-30) ✅ |
 | 09 - Modal & Theme Enhancements | Future |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
@@ -82,6 +82,7 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Goal progress shown only with both goal and progress values | 08-01 | Avoids showing "0%" for funds without fundraising goals |
 | DELETE removes designation entirely (not just deactivate) | 08-02 | Permanent delete returns 404 from Classy API |
 | Default designation cannot be deleted | 08-02 | Must change default in Classy before deleting that designation |
+| Sync status is binary (not time-based) | 08-03 | If designation ID exists and no error, show "Synced" regardless of last sync time |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -104,18 +105,22 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed 08-02 (DELETE sync verification)
+Stopped at: Phase 8 complete and verified
 
-**Completed in 08-02:**
-1. Created test fund on staging (post 13855, designation 1896404)
-2. Verified trash behavior: designation deactivated (is_active: false)
-3. Verified restore behavior: designation reactivated (is_active: true)
-4. Verified permanent delete: designation removed from Classy (404 response)
-5. Human verified admin UI shows donation totals correctly
-6. Updated deployment checklist with verification evidence
+**Phase 8 Complete:**
+- 08-01: Admin meta box donation totals display ✅
+- 08-02: DELETE sync verification + deployment checklist ✅
+- 08-03: Fixed sync status column to show "Synced" ✅
+- Verification: 7/7 must-haves passed
+
+**Key outcomes:**
+1. Admin can see donation totals in fund edit screen
+2. DELETE permanently removes designation from Classy
+3. Sync status column correctly shows "Synced" for linked funds
+4. Production deployment checklist documented
 
 **Next steps:**
-1. 08-03: Production deployment planning and execution
+1. Deploy to production (user task - see docs/production-deployment-checklist.md)
 2. Phase 9 (Future): Modal enhancements and theme refactor
 
 **Staging verification URL:** `https://frederickc2stg.wpengine.com/wp-admin/post.php?post=13854&action=edit`

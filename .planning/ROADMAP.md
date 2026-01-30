@@ -122,12 +122,19 @@ Plans:
 ### Phase 8: Production Launch (MVP)
 **Goal**: Complete admin UI, verify delete sync, plan production deployment
 **Depends on**: Phase 7
-**Status**: Planned
-**Plans:** 2 plans in 2 waves
+**Status**: Complete (2026-01-30)
+**Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 08-01-PLAN.md — Add donation totals display to admin meta box (ADMN-02)
-- [ ] 08-02-PLAN.md — Verify DELETE sync + finalize deployment checklist
+- [x] 08-01-PLAN.md — Add donation totals display to admin meta box (ADMN-02)
+- [x] 08-02-PLAN.md — Verify DELETE sync + finalize deployment checklist
+- [x] 08-03-PLAN.md — Fix sync status column to show "Synced" for linked funds
+
+**Results:**
+- Admin meta box displays donation totals, donor count, goal progress
+- DELETE sync verified: trash = deactivate, permanent delete = remove
+- Sync status column fixed to show "Synced" for all linked funds
+- Deployment checklist updated with verification evidence
 
 **Scope:**
 - Admin meta box showing designation ID (clickable link to Classy) - ALREADY EXISTS
@@ -193,7 +200,7 @@ Luke Dringoli recommended using Classy's "button link" version instead of Bootst
 | 5. Code Cleanup | Complete | 2026-01-29 |
 | 6. Master Campaign Integration | Complete | 2026-01-29 |
 | 7. Frontend Embed | Complete | 2026-01-29 |
-| 8. Production Launch (MVP) | Planned | - |
+| 8. Production Launch (MVP) | Complete | 2026-01-30 |
 | 9. Modal & Theme Enhancements | Future | - |
 
 ---
@@ -265,4 +272,4 @@ Classy embed renders with fund pre-selected
 
 ---
 
-*Last updated: 2026-01-29*
+*Last updated: 2026-01-30*

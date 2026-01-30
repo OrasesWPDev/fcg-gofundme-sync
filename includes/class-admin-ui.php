@@ -716,6 +716,40 @@ class FCG_GFM_Admin_UI {
     }
 
     /**
+     * Get master campaign ID with constant priority
+     *
+     * @return int Master campaign ID
+     */
+    private function get_master_campaign_id(): int {
+        // Constants take priority over wp_options
+        if (defined('GOFUNDME_MASTER_CAMPAIGN_ID') && GOFUNDME_MASTER_CAMPAIGN_ID) {
+            return (int) GOFUNDME_MASTER_CAMPAIGN_ID;
+        }
+        return (int) get_option('fcg_gofundme_master_campaign_id', 0);
+    }
+
+    /**
+     * Get master component ID with constant priority
+     *
+     * @return string Master component ID
+     */
+    private function get_master_component_id(): string {
+        if (defined('GOFUNDME_MASTER_COMPONENT_ID') && GOFUNDME_MASTER_COMPONENT_ID) {
+            return (string) GOFUNDME_MASTER_COMPONENT_ID;
+        }
+        return (string) get_option('fcg_gofundme_master_component_id', '');
+    }
+
+    /**
+     * Check if configuration is from wp-config.php constants
+     *
+     * @return bool True if using constants
+     */
+    private function is_config_from_constants(): bool {
+        return defined('GOFUNDME_MASTER_CAMPAIGN_ID') && GOFUNDME_MASTER_CAMPAIGN_ID;
+    }
+
+    /**
      * Migrate old template campaign setting to new master campaign setting
      * One-time migration for existing installations
      */

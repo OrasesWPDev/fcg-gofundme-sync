@@ -309,6 +309,19 @@ class FCG_GFM_Sync_Handler {
     }
 
     /**
+     * Get master campaign ID with constant priority
+     *
+     * @return int Master campaign ID
+     */
+    private function get_master_campaign_id(): int {
+        // Constants take priority over wp_options
+        if (defined('GOFUNDME_MASTER_CAMPAIGN_ID') && GOFUNDME_MASTER_CAMPAIGN_ID) {
+            return (int) GOFUNDME_MASTER_CAMPAIGN_ID;
+        }
+        return (int) get_option('fcg_gofundme_master_campaign_id', 0);
+    }
+
+    /**
      * Link a designation to the master campaign
      *
      * This adds the designation to the campaign's active designation group,
@@ -318,7 +331,7 @@ class FCG_GFM_Sync_Handler {
      * @param int $post_id WordPress post ID (for logging)
      */
     private function link_designation_to_campaign($designation_id, int $post_id): void {
-        $master_campaign_id = get_option('fcg_gofundme_master_campaign_id');
+        $master_campaign_id = $this->get_master_campaign_id();
 
         if (empty($master_campaign_id)) {
             $this->log_info("Skipping campaign link for designation {$designation_id}: no master campaign configured");

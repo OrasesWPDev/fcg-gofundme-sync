@@ -91,17 +91,12 @@ class FCG_GFM_Admin_UI {
             return;
         }
 
+        // Has designation ID and no error = Synced
         if ($last_sync) {
-            $last_sync_time = strtotime($last_sync);
-            $fifteen_min_ago = time() - (15 * 60);
-
-            if ($last_sync_time > $fifteen_min_ago) {
-                echo '<span class="fcg-sync-status fcg-sync-synced" title="Last synced: ' . esc_attr($last_sync) . '">Synced</span>';
-            } else {
-                echo '<span class="fcg-sync-status fcg-sync-pending" title="Last synced: ' . esc_attr($last_sync) . '">Pending</span>';
-            }
+            echo '<span class="fcg-sync-status fcg-sync-synced" title="Last synced: ' . esc_attr($last_sync) . '">Synced</span>';
         } else {
-            echo '<span class="fcg-sync-status fcg-sync-pending" title="Never synced">Pending</span>';
+            // Has designation but no last_sync timestamp (edge case - manual entry)
+            echo '<span class="fcg-sync-status fcg-sync-synced" title="Designation linked">Synced</span>';
         }
     }
 

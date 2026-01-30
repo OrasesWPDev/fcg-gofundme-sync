@@ -72,11 +72,15 @@ define('GOFUNDME_ORG_ID', '104060');
 ## Pre-Deployment Checklist
 
 ### Staging Verification (before production)
-- [ ] All 860+ funds have designation IDs synced
-- [ ] Test donation completes with correct designation
-- [ ] DELETE test: deleting a fund removes designation from Classy
-- [ ] Inbound sync polling works (donation totals update)
-- [ ] Admin UI shows designation info correctly
+- [x] All 860+ funds have designation IDs synced
+- [x] Test donation completes with correct designation
+- [x] DELETE test: deleting a fund removes designation from Classy
+  - Verified: 2026-01-30 via Phase 8 testing
+  - Behavior: Trash = deactivate (is_active: false), Permanent delete = remove entirely (404)
+  - Note: Default designation cannot be deleted (change default first)
+- [x] Inbound sync polling works (donation totals update)
+- [x] Admin UI shows designation info correctly
+  - Includes donation totals from inbound sync (verified 2026-01-30)
 
 ### Production Preparation
 - [ ] Master campaign created in production Classy account
@@ -147,6 +151,9 @@ WP Engine requires Alternate Cron for reliable scheduling:
 - [ ] Complete a test donation (use sandbox card if available)
 - [ ] Check Classy dashboard for donation with correct designation
 - [ ] Verify inbound sync updates donation totals
+- [ ] Verify admin UI shows donation data after inbound sync runs
+  - Edit any fund, check "GoFundMe Pro Sync" meta box
+  - Should show: Donation Total, Donor Count, Goal Progress (if applicable)
 
 ## Post-Deployment
 
@@ -160,6 +167,19 @@ If issues occur:
 1. Deactivate plugin in WordPress admin
 2. Previous donation provider (Accativa) forms will need manual restoration
 3. Contact Classy support if designation sync issues
+
+## Admin UI Features (Phase 8)
+
+The fund edit screen meta box ("GoFundMe Pro Sync") displays:
+- Designation ID (with link to Classy admin)
+- Last Sync timestamp
+- Sync source
+- Fundraising Goal (editable)
+- **Donation Total** (from inbound sync, formatted as currency)
+- **Donor Count** (from inbound sync)
+- **Goal Progress** (percentage, when goal set)
+- **Last Inbound Sync** timestamp
+- Sync Now button
 
 ## Theme Files Reference
 

@@ -8,10 +8,10 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 8 (Production Launch MVP)
-Plan: 3 of 3
-Status: **Complete** ✅
-Last activity: 2026-01-30 — Phase 8 verified (7/7 must-haves passed)
+Phase: 9.1 (Environment-Safe Configuration)
+Plan: 1 of 1
+Status: **Planned** 📋
+Last activity: 2026-01-30 — Phase 9.1 planned
 
 Progress: [█████████░] 85% (6 of 7 phases complete)
 
@@ -34,7 +34,8 @@ Classy confirmed single master campaign approach:
 - ~~Phase 6: Master Campaign Integration~~ ✅ Complete
 - ~~Phase 7: Frontend Embed~~ ✅ Complete (with modal workaround)
 - ~~Phase 8: Production Launch (MVP)~~ ✅ Complete
-- Phase 9: Modal & Theme Enhancements (future)
+- **Phase 9.1: Environment-Safe Configuration** 📋 Planned
+- Phase 9.2: Modal & Theme Enhancements (future)
 
 See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
@@ -48,7 +49,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | 06 - Master Campaign Integration | Complete (2026-01-29) |
 | 07 - Frontend Embed | **Complete** (2026-01-29) ✅ |
 | 08 - Production Launch (MVP) | **Complete** (2026-01-30) ✅ |
-| 09 - Modal & Theme Enhancements | Future |
+| 09.1 - Environment-Safe Configuration | **Planned** 📋 |
+| 09.2 - Modal & Theme Enhancements | Future |
 
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
 
@@ -83,6 +85,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | DELETE removes designation entirely (not just deactivate) | 08-02 | Permanent delete returns 404 from Classy API |
 | Default designation cannot be deleted | 08-02 | Must change default in Classy before deleting that designation |
 | Sync status is binary (not time-based) | 08-03 | If designation ID exists and no error, show "Synced" regardless of last sync time |
+| **Hostname-based credential switching in wp-config.php** | 09-01 | Both staging and production creds in same file; hostname detection selects correct set |
+| WP Engine has NO environment variables for traditional WordPress | 09-01 | Only Atlas/Headless has env vars UI; traditional hosting uses wp-config.php constants |
+| Admin UI shows read-only IDs when constants defined | 09-01 | Simplifies UI, prevents accidental misconfiguration |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -93,9 +98,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 ### Pending Todos
 
-1 todo pending — see `.planning/todos/pending/`
+0 todos pending
 
-- **Environment-safe credential management** — Brainstorm secure method for prod→staging database copies
+- ~~**Environment-safe credential management**~~ → Addressed by Phase 9.1
 
 ### Pending Manual Work
 

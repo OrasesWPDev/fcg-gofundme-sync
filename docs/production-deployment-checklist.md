@@ -181,19 +181,18 @@ The fund edit screen meta box ("GoFundMe Pro Sync") displays:
 - **Last Inbound Sync** timestamp
 - Sync Now button
 
-## Theme Files Reference
+## Theme Files to Deploy
 
-Files modified for Classy integration:
+Two theme files need to be copied to production:
 
-| File | Change | Status |
-|------|--------|--------|
-| `fund-form.php` | Classy inline embed | Deploy |
-| `archive-funds.php` | Modal disabled, direct links | Deploy |
-| `search.php` | Modal removal needed | Phase 9 |
-| `taxonomy-fund-category.php` | Modal removal needed | Phase 9 |
-| `template-flexible.php` | Modal removal needed | Phase 9 |
+| File | Purpose |
+|------|---------|
+| `fund-form.php` | Classy donation embed on single fund pages |
+| `archive-funds.php` | Fund listing with direct links to fund pages |
+
+These files are in the theme directory: `wp-content/themes/developer/`
 
 ---
 
-*Last updated: 2026-01-29*
+*Last updated: 2026-01-30*
 *Phase: 8 (Production Launch MVP)*

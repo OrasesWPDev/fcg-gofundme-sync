@@ -91,6 +91,12 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 - **5 new designations** created via API are NOT in the group yet
 - **11 test designations** cleaned up from Classy
 
+### Pending Todos
+
+1 todo pending — see `.planning/todos/pending/`
+
+- **Environment-safe credential management** — Brainstorm secure method for prod→staging database copies
+
 ### Pending Manual Work
 
 - ~~Create master campaign in Classy UI~~ ✅ Done (Campaign 764694)

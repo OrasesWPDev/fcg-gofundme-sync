@@ -225,6 +225,10 @@ If issues occur, restore original files from WP Engine backup or:
 - Changed "Learn More" to "Give Now" for direct fund page links
 - Documented original code for future reference
 
+**v2.3.1-mobile-fix (2026-02-24):**
+- Fixed mobile race condition where "I'd like to support" defaulted to "General Fund Project"
+- See full details below in **Mobile Fix: Fund Designation Race Condition**
+
 ---
 
 ## Technical Notes
@@ -260,4 +264,109 @@ For issues with this implementation:
 
 ---
 
-*Last Updated: 2026-01-29*
+---
+
+## Mobile Fix: Fund Designation Race Condition
+
+**Date:** 2026-02-24
+**Status:** Applied to Staging — needs deployment to Production theme
+
+### Problem
+
+On mobile, the Classy donation form's "I'd like to support" field showed **"General Fund Project"** instead of the specific fund the user navigated to.
+
+### Root Cause
+
+A race condition between two scripts in the page `<head>`:
+
+1. The **Classy SDK** is loaded with `async` (via the `classy-wp` plugin):
+   ```html
+   <script async src="https://giving.classy.org/embedded/api/sdk/js/{org_id}"></script>
+   ```
+2. The **designation-setting script** was in `fund-form.php` inside `<body>`:
+   ```javascript
+   url.searchParams.set('designation', designationId);
+   window.history.replaceState({}, '', url.toString());
+   ```
+
+With `async`, the Classy SDK can download and **initialize before** the body script runs. When it initializes, `?designation=` isn't in the URL yet, so Classy falls back to the master campaign's default — "General Fund Project". On mobile, unpredictable CPU/network timing makes this race condition happen consistently.
+
+**Attempted (failed) fix:** Changing `async` to `defer` on the Classy SDK script broke the donation form entirely on mobile — the form wouldn't initialize at all.
+
+### Solution
+
+Added a `wp_head` hook at **priority 1** to the theme's `functions.php`. This outputs the designation-setting script as the very first item in `<head>`, before the browser even encounters the Classy `<script async>` tag:
+
+```php
+add_action('wp_head', 'fcg_set_fund_designation_early', 1);
+function fcg_set_fund_designation_early() {
+    if (!is_singular('funds')) return;
+    $designation_id = get_post_meta(get_the_ID(), '_gofundme_designation_id', true);
+    if (!$designation_id) return;
+    ?>
+    <script>
+    (function() {
+        var url = new URL(window.location.href);
+        var id = '<?php echo esc_js($designation_id); ?>';
+        if (url.searchParams.get('designation') !== id) {
+            url.searchParams.set('designation', id);
+            window.history.replaceState({}, '', url.toString());
+        }
+    })();
+    </script>
+    <?php
+}
+```
+
+**Why this works:** The inline script is synchronous and runs before the browser encounters the `<script async>` Classy tag. By the time Classy's SDK downloads and initializes, `?designation={id}` is already in the URL.
+
+### Files Changed
+
+| File | Location | Change |
+|------|----------|--------|
+| `functions.php` | `wp-content/themes/community-foundation/` | Added `fcg_set_fund_designation_early()` at end of file |
+
+### Deployment Status
+
+| Environment | Status |
+|-------------|--------|
+| Staging | ✅ Applied and verified working |
+| Production | ⬜ Not yet deployed |
+
+### Production Deployment
+
+Add the following to the **end** of `community-foundation/functions.php` on production:
+
+```php
+/**
+ * Pre-set fund designation URL parameter before Classy SDK loads.
+ *
+ * The Classy SDK is loaded async in <head> and can initialize before the
+ * inline script in fund-form.php runs, causing a race condition on mobile
+ * where the SDK reads the URL before ?designation= is set and falls back
+ * to "General Fund Project". Running at priority 1 ensures this script
+ * outputs before the Classy <script async> tag is encountered.
+ */
+add_action('wp_head', 'fcg_set_fund_designation_early', 1);
+function fcg_set_fund_designation_early() {
+    if (!is_singular('funds')) return;
+    $designation_id = get_post_meta(get_the_ID(), '_gofundme_designation_id', true);
+    if (!$designation_id) return;
+    ?>
+    <script>
+    (function() {
+        var url = new URL(window.location.href);
+        var id = '<?php echo esc_js($designation_id); ?>';
+        if (url.searchParams.get('designation') !== id) {
+            url.searchParams.set('designation', id);
+            window.history.replaceState({}, '', url.toString());
+        }
+    })();
+    </script>
+    <?php
+}
+```
+
+---
+
+*Last Updated: 2026-02-24*

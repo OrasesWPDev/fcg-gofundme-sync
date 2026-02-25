@@ -325,17 +325,20 @@ function fcg_set_fund_designation_early() {
 | File | Location | Change |
 |------|----------|--------|
 | `functions.php` | `wp-content/themes/community-foundation/` | Added `fcg_set_fund_designation_early()` at end of file |
+| `fund-form.php` | `wp-content/themes/community-foundation/` | Removed redundant inline designation script (now handled by `wp_head` priority 1) |
+
+See `theme-changes/functions-php-additions.php` and `theme-changes/fund-form.php` for the exact code.
 
 ### Deployment Status
 
 | Environment | Status |
 |-------------|--------|
-| Staging | ✅ Applied and verified working |
+| Staging | ⬜ functions.php applied; fund-form.php cleanup pending deploy |
 | Production | ⬜ Not yet deployed |
 
 ### Production Deployment
 
-Add the following to the **end** of `community-foundation/functions.php` on production:
+**1. Add to the end of `community-foundation/functions.php`:**
 
 ```php
 /**
@@ -367,6 +370,8 @@ function fcg_set_fund_designation_early() {
 }
 ```
 
+**2. Replace `community-foundation/fund-form.php`** with the version in `theme-changes/fund-form.php` (removes the redundant inline designation script from `<body>`).
+
 ---
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-02-25*

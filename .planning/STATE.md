@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 9.1.1 (Mobile Bug Fixes)
-Plan: 0 of 0 (not yet planned)
-Status: **Not Planned**
-Last activity: 2026-02-26 — Phase 9.1.1 inserted for client-reported mobile issues
+Plan: 1 of 3 complete
+Status: **In Progress**
+Last activity: 2026-02-26 — Completed 09.1.1-01-PLAN.md (staging verification + popup investigation)
 
-Progress: [██████████] 100% (7 of 7 phases complete)
+Progress: [██████████] (core phases 100%; 9.1.1 in progress: 1/3 plans done)
 
 ## Classy Call Summary (2026-01-29)
 
@@ -64,6 +64,12 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
   - 3 issues are Classy SDK configuration (abandoned donation reminder, monthly upsell, scroll-lock)
   - Phase 9.2 dependency updated to depend on 9.1.1
 
+- Plan 09.1.1-01 complete (2026-02-26):
+  - Staging fund-form.php confirmed already current (no deploy needed)
+  - Staging functions.php confirmed has fcg_set_fund_designation_early hook at line 1068
+  - "Make a difference!" popup CONFIRMED = Classy SDK abandoned cart nudge (not WP database, not plugin)
+  - Next: Plan 02 must investigate Classy dashboard to disable the nudge feature
+
 ### Key Decisions
 
 | Decision | Phase | Context |
@@ -98,6 +104,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | Admin UI shows read-only IDs when constants defined | 09-01 | Simplifies UI, prevents accidental misconfiguration |
 | **Constants take priority over wp_options** | 09-01 | GOFUNDME_MASTER_CAMPAIGN_ID and GOFUNDME_MASTER_COMPONENT_ID read from constants first |
 | **Polling settings excluded from constants** | 09-01 | Interval and enabled still saved to wp_options (not environment-specific) |
+| **"Make a difference!" popup = Classy SDK abandoned cart nudge** | 09.1.1-01 | Confirmed NOT in WP database or plugins; must be disabled in Classy dashboard settings |
+| **Staging fund-form.php already current** | 09.1.1-01 | Was deployed prior to plan execution; no rsync needed |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -124,24 +132,22 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Inserted Phase 9.1.1 (Mobile Bug Fixes) — ready for planning
+Last session: 2026-02-26T16:12:49Z
+Stopped at: Completed 09.1.1-01-PLAN.md — staging verified, popup source identified
 
-**Phase 9.1 Complete:**
-- 09-01: Environment-Safe Configuration
-- 5 tasks completed in 3 minutes
-- 4 commits: cd013e5, dbb76bc, b8f2697, f7ba46f
+**Phase 9.1.1 Plan 01 Complete:**
+- Task 1: Staging fund-form.php confirmed current (already deployed), functions.php hook confirmed
+- Task 2: "Make a difference!" popup confirmed = Classy SDK abandoned cart nudge
 
-**Key outcomes:**
-1. Constants GOFUNDME_MASTER_CAMPAIGN_ID and GOFUNDME_MASTER_COMPONENT_ID now supported
-2. Admin UI shows read-only configuration when constants defined
-3. Save logic skips wp_options when constants take priority
-4. Comprehensive documentation in docs/environment-configuration.md
+**Key findings:**
+1. Staging fund-form.php already had clean version (no redundant inline script) — was deployed pre-plan
+2. Staging functions.php has `fcg_set_fund_designation_early` hook at line 1068 (priority 1)
+3. Popup NOT in wp_posts, wp_options, theme files, or plugins — confirmed Classy SDK feature
+4. insert-headers-and-footers has no configured content (ihaf_plugin_options = not found)
 
 **Next steps:**
-1. Configure wp-config.php on staging and production (user task)
-2. Deploy plugin to staging for verification
-3. Phase 9.2 (Future): Modal & theme enhancements
+1. Plan 02: Investigate Classy dashboard to find and disable abandoned cart nudge setting
+2. Plan 03: Deploy to production (staging is verified ready)
 
 Resume file: None
 

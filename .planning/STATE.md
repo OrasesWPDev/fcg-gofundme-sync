@@ -8,10 +8,10 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 9.1 (Environment-Safe Configuration)
-Plan: 1 of 1
-Status: **Complete**
-Last activity: 2026-01-30 — Completed 09-01-PLAN.md
+Phase: 9.1.1 (Mobile Bug Fixes)
+Plan: 0 of 0 (not yet planned)
+Status: **Not Planned**
+Last activity: 2026-02-26 — Phase 9.1.1 inserted for client-reported mobile issues
 
 Progress: [██████████] 100% (7 of 7 phases complete)
 
@@ -55,6 +55,14 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 **Archived:** Phases 2, 3, original 5 — see `.planning/phases/archived/`
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 9.1.1 inserted after Phase 9.1: Mobile Bug Fixes (URGENT) — 2026-02-26
+  - Trigger: Client sent 4 video recordings of mobile issues
+  - 1 issue is ours (designation race condition — fix already written)
+  - 3 issues are Classy SDK configuration (abandoned donation reminder, monthly upsell, scroll-lock)
+  - Phase 9.2 dependency updated to depend on 9.1.1
 
 ### Key Decisions
 
@@ -116,8 +124,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 ## Session Continuity
 
-Last session: 2026-01-30
-Stopped at: Completed Phase 9.1 (09-01-PLAN.md)
+Last session: 2026-02-26
+Stopped at: Inserted Phase 9.1.1 (Mobile Bug Fixes) — ready for planning
 
 **Phase 9.1 Complete:**
 - 09-01: Environment-Safe Configuration

@@ -20,6 +20,7 @@ This roadmap manages the WordPress plugin that synchronizes "funds" custom post 
 - [x] **Phase 9.1: Environment-Safe Configuration** - wp-config.php constants with hostname detection
 
 **Upcoming:**
+- [ ] **Phase 9.1.1: Mobile Bug Fixes** - Client-reported mobile issues: race condition deploy, Classy SDK popups (INSERTED)
 - [ ] **Phase 9.2: Modal & Theme Enhancements** - Classy button links, fund-modal.php fix, theme refactor
 
 ## Phase Details
@@ -186,9 +187,43 @@ Plans:
 
 ---
 
+### Phase 9.1.1: Mobile Bug Fixes (INSERTED)
+**Goal**: Fix client-reported mobile issues: designation race condition deployment, Classy SDK popup/overlay configuration
+**Depends on**: Phase 9.1 (environment-safe config)
+**Status**: Planned
+**Plans:** 3 plans in 2 waves
+
+**Client-Reported Issues (from video recordings 2026-02-19):**
+
+| # | Issue | Root Cause | Owner | Video |
+|---|-------|-----------|-------|-------|
+| 1 | Safari form freezes / dims | Classy "abandoned donation reminder" overlay activates on inactivity | Classy SDK config | safari doesn't load.mov |
+| 2 | Popup blocks donation progress | Same reminder popup + monthly upsell interstitial | Classy SDK config | Popup reminder blocks forward progress of donation.MOV |
+| 3 | Fund page defaults to General Fund | Race condition: Classy SDK loads before designation URL param is set | **Our code** (fix exists) | In a fund page but defaulted to General.MOV |
+| 4 | Sticky/stuck mobile scroll | Classy modal flow traps user in scroll-lock during upsell | Classy SDK config | sticky mobile.mov |
+
+**Scope:**
+- Deploy existing race condition fix to production (Issue #3 — code in functions.php wp_head hook)
+- Investigate Classy campaign settings to disable abandoned donation reminder (Issues #1, #2)
+- Investigate Classy campaign settings to disable monthly upsell interstitial (Issues #2, #4)
+- Contact Classy support if settings aren't self-service
+- Verify all 4 issues resolved on staging and production
+
+**Key Context:**
+- Issue #3 fix already written and deployed to staging (2026-02-24): `wp_head` priority 1 script injects `?designation={id}` before Classy SDK async load
+- Issues #1, #2, #4 are Classy SDK behaviors, not our plugin code
+- Client videos stored in `client-vidoes/` directory (frames extracted to `client-vidoes/frames/`)
+
+Plans:
+- [ ] 09.1.1-01-PLAN.md — Deploy theme files to staging + investigate popup source
+- [ ] 09.1.1-02-PLAN.md — Classy SDK nudge investigation in sandbox dashboard
+- [ ] 09.1.1-03-PLAN.md — Production deployment + final verification
+
+---
+
 ### Phase 9.2: Modal & Theme Enhancements (Post-MVP)
 **Goal**: Restore modal functionality using Classy button links, consolidate theme files
-**Depends on**: Phase 9.1 (environment-safe config)
+**Depends on**: Phase 9.1.1 (mobile bugs fixed)
 **Status**: Future
 
 **Background (from Classy call 2026-01-29):**
@@ -226,6 +261,7 @@ Luke Dringoli recommended using Classy's "button link" version instead of Bootst
 | 7. Frontend Embed | Complete | 2026-01-29 |
 | 8. Production Launch (MVP) | Complete | 2026-01-30 |
 | 9.1. Environment-Safe Configuration | Complete | 2026-01-30 |
+| 9.1.1. Mobile Bug Fixes | Planned | - |
 | 9.2. Modal & Theme Enhancements | Future | - |
 
 ---
@@ -299,4 +335,4 @@ Classy embed renders with fund pre-selected
 
 ---
 
-*Last updated: 2026-01-30 (Phase 9.1 complete)*
+*Last updated: 2026-02-26 (Phase 9.1.1 inserted — client-reported mobile bugs)*

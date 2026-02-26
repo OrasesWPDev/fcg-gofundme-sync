@@ -1,7 +1,8 @@
 # Mobile Popup Scroll Lock Investigation
 
 **Date Started:** 2026-02-24
-**Status:** In Progress — not yet resolved
+**Last Updated:** 2026-02-25
+**Status:** In Progress — new finding: popup may be blocking Classy checkout modal
 
 ---
 
@@ -60,6 +61,35 @@ $(document).on('hidden.bs.modal', '.modal', function () {
     }
 });
 ```
+
+---
+
+## Session Findings (2026-02-25)
+
+### Designation Fix Verified ✅
+
+The `wp_head` priority 1 fix from the merged PR is confirmed working on staging:
+- `?designation=1894980` is correctly set in the URL on page load
+- The Classy donation form renders on both desktop and mobile viewports
+- No JavaScript errors from the page itself
+
+### New Issue: Classy Checkout Popup Not Appearing on Mobile
+
+**Reported by user:** After selecting a donation amount and clicking Donate on mobile, the Classy checkout popup does not appear.
+
+**Desktop behavior (confirmed working):** Clicking Donate updates the URL to include `?campaign=...&designation=...&frequency=...&amount=...` and opens the Classy checkout modal.
+
+**Mobile behavior:** URL does not update after clicking Donate — Classy is not processing the click or its checkout popup is being blocked.
+
+**Key observation:** On mobile the "Make a difference!" popup overlaps the donation form area significantly. The popup may be:
+1. **Physically blocking the Donate button** — its overlay intercepts the tap
+2. **Holding a scroll/overflow lock on `<body>`** — preventing the Classy checkout modal from rendering visibly even if it opens
+
+This is the most likely connection between the two issues (scroll lock + missing checkout popup) — they share the same root cause.
+
+### "Make a difference!" Popup — Confirmed Visible on Staging
+
+The popup is visible on both desktop and mobile staging. It appears as a bottom-left overlay with a "Give Now" button. Source still not identified (not in theme files — must be database-stored).
 
 ---
 

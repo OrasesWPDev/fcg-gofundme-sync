@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 9.1.1 (Mobile Bug Fixes)
-Plan: 2 of 3 complete
-Status: **In Progress**
-Last activity: 2026-02-26 — Completed 09.1.1-02-PLAN.md (Classy SDK nudge investigation + disable)
+Plan: 2.5 of 3 (plan 03 Task 1 complete; at Task 2 checkpoint)
+Status: **At Checkpoint** — awaiting human verification of all 4 issues on staging + production
+Last activity: 2026-02-26 — Executing 09.1.1-03-PLAN.md Task 1 (production deploy complete)
 
-Progress: [██████████] (core phases 100%; 9.1.1 in progress: 2/3 plans done)
+Progress: [██████████] (core phases 100%; 9.1.1 in progress: plan 03 Task 1/2 done)
 
 ## Classy Call Summary (2026-01-29)
 
@@ -114,6 +114,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | **Recurring donation nudge disabled in sandbox** | 09.1.1-02 | Design tab > Recurring Nudge section (not Embedded Studio > Settings as docs predicted); Issues #2 and #4 resolved |
 | **Abandon cart nudge was ON, user disabled** | 09.1.1-02 | Found under Settings > Donations > Donation options; user disabled before posting screenshot |
 | **Production campaign 764752 nudges DONE** | 09.1.1-02 | User proactively disabled both nudges on production — Plan 03 only needs theme deployment |
+| **Production functions.php race condition fix deployed** | 09.1.1-03 | Appended fcg_set_fund_designation_early at line 1089; was NOT present before (grep exit 1 confirmed safe) |
+| **Production fund-form.php replaced with Classy embed** | 09.1.1-03 | Old file was custom HTML form from pre-Phase 7; now matches repo theme-changes/fund-form.php |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -140,24 +142,23 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 ## Session Continuity
 
-Last session: 2026-02-26T16:24:08Z
-Stopped at: Completed 09.1.1-02-PLAN.md — Classy SDK nudges investigated and disabled in sandbox
+Last session: 2026-02-26T16:30:25Z
+Stopped at: 09.1.1-03-PLAN.md Task 1 complete (production deployed); at Task 2 checkpoint (human verification)
 
-**Phase 9.1.1 Plan 02 Complete:**
-- Task 1: User navigated Classy sandbox campaign 764694 dashboard
-  - Recurring nudge ("Become a monthly supporter!"): WAS ON — disabled via Design tab > Recurring Nudge section
-  - Abandon cart nudge ("Make a difference!"): WAS ON — disabled by user via Settings > Donations > Donation options
-- Task 2: SKIPPED — both nudges resolved self-service, no escalation doc needed
+**Phase 9.1.1 Plan 03 Task 1 Complete:**
+- Verified production functions.php did NOT have fcg_set_fund_designation_early hook (grep exit 1)
+- Safely appended race condition fix to production functions.php (now at line 1089, exactly once)
+- Deployed updated fund-form.php to production (replaced old custom form with Classy embed template)
+- Production fund-form.php confirmed matches repo version (diff: no difference)
+- Production site HTTP 200 (no PHP errors)
+- Plugin deployment skipped (no plugin code changed in 9.1.1)
 
-**Dashboard location correction (vs research):**
-- Research predicted: Embedded Studio > Settings > Nudges (for both)
-- Actual recurring nudge: Design tab > Recurring Nudge section
-- Actual abandon cart nudge: Settings tab > Donations > Donation options (bottom)
+**At Checkpoint (Task 2):**
+- All 4 fixes are now active on both environments
+- Waiting for user to verify all 4 issues on staging + production
+- Commit: c2ffade
 
-**Next steps:**
-1. Plan 03: Deploy race condition fix to production (Classy nudges already disabled on production by user)
-
-Resume file: None
+Resume file: None — will resume when user provides verification results
 
 ## Phase 6 Verification Results
 

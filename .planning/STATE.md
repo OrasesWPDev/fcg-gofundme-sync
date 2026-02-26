@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 9.1.1 (Mobile Bug Fixes)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: **In Progress**
-Last activity: 2026-02-26 — Completed 09.1.1-01-PLAN.md (staging verification + popup investigation)
+Last activity: 2026-02-26 — Completed 09.1.1-02-PLAN.md (Classy SDK nudge investigation + disable)
 
-Progress: [██████████] (core phases 100%; 9.1.1 in progress: 1/3 plans done)
+Progress: [██████████] (core phases 100%; 9.1.1 in progress: 2/3 plans done)
 
 ## Classy Call Summary (2026-01-29)
 
@@ -68,7 +68,12 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
   - Staging fund-form.php confirmed already current (no deploy needed)
   - Staging functions.php confirmed has fcg_set_fund_designation_early hook at line 1068
   - "Make a difference!" popup CONFIRMED = Classy SDK abandoned cart nudge (not WP database, not plugin)
-  - Next: Plan 02 must investigate Classy dashboard to disable the nudge feature
+
+- Plan 09.1.1-02 complete (2026-02-26):
+  - Recurring donation nudge ("Become a monthly supporter!") DISABLED in sandbox 764694 — Design tab
+  - Abandon cart nudge ("Make a difference!") already OFF in sandbox — Settings > Donations
+  - Issues #2 and #4 resolved in sandbox; no escalation to Classy needed
+  - Next: Plan 03 must apply same fix to PRODUCTION campaign 764752 + deploy race condition fix
 
 ### Key Decisions
 
@@ -106,6 +111,9 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | **Polling settings excluded from constants** | 09-01 | Interval and enabled still saved to wp_options (not environment-specific) |
 | **"Make a difference!" popup = Classy SDK abandoned cart nudge** | 09.1.1-01 | Confirmed NOT in WP database or plugins; must be disabled in Classy dashboard settings |
 | **Staging fund-form.php already current** | 09.1.1-01 | Was deployed prior to plan execution; no rsync needed |
+| **Recurring donation nudge disabled in sandbox** | 09.1.1-02 | Design tab > Recurring Nudge section (not Embedded Studio > Settings as docs predicted); Issues #2 and #4 resolved |
+| **Abandon cart nudge already OFF in sandbox** | 09.1.1-02 | Found under Settings > Donations > Donation options; was already disabled |
+| **Production campaign 764752 nudge status unknown** | 09.1.1-02 | Plan 03 must disable recurring nudge on production and verify abandon cart nudge |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -132,22 +140,22 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 
 ## Session Continuity
 
-Last session: 2026-02-26T16:12:49Z
-Stopped at: Completed 09.1.1-01-PLAN.md — staging verified, popup source identified
+Last session: 2026-02-26T16:24:08Z
+Stopped at: Completed 09.1.1-02-PLAN.md — Classy SDK nudges investigated and disabled in sandbox
 
-**Phase 9.1.1 Plan 01 Complete:**
-- Task 1: Staging fund-form.php confirmed current (already deployed), functions.php hook confirmed
-- Task 2: "Make a difference!" popup confirmed = Classy SDK abandoned cart nudge
+**Phase 9.1.1 Plan 02 Complete:**
+- Task 1: User navigated Classy sandbox campaign 764694 dashboard
+  - Recurring nudge ("Become a monthly supporter!"): WAS ON — disabled via Design tab > Recurring Nudge section
+  - Abandon cart nudge ("Make a difference!"): already OFF — Settings > Donations > Donation options
+- Task 2: SKIPPED — both nudges resolved self-service, no escalation doc needed
 
-**Key findings:**
-1. Staging fund-form.php already had clean version (no redundant inline script) — was deployed pre-plan
-2. Staging functions.php has `fcg_set_fund_designation_early` hook at line 1068 (priority 1)
-3. Popup NOT in wp_posts, wp_options, theme files, or plugins — confirmed Classy SDK feature
-4. insert-headers-and-footers has no configured content (ihaf_plugin_options = not found)
+**Dashboard location correction (vs research):**
+- Research predicted: Embedded Studio > Settings > Nudges (for both)
+- Actual recurring nudge: Design tab > Recurring Nudge section
+- Actual abandon cart nudge: Settings tab > Donations > Donation options (bottom)
 
 **Next steps:**
-1. Plan 02: Investigate Classy dashboard to find and disable abandoned cart nudge setting
-2. Plan 03: Deploy to production (staging is verified ready)
+1. Plan 03: Disable recurring nudge on PRODUCTION campaign 764752, deploy race condition fix to production
 
 Resume file: None
 

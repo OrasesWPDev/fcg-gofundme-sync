@@ -112,8 +112,8 @@ See: `.planning/ARCHITECTURE-PIVOT-2026-01-28.md` for full details
 | **"Make a difference!" popup = Classy SDK abandoned cart nudge** | 09.1.1-01 | Confirmed NOT in WP database or plugins; must be disabled in Classy dashboard settings |
 | **Staging fund-form.php already current** | 09.1.1-01 | Was deployed prior to plan execution; no rsync needed |
 | **Recurring donation nudge disabled in sandbox** | 09.1.1-02 | Design tab > Recurring Nudge section (not Embedded Studio > Settings as docs predicted); Issues #2 and #4 resolved |
-| **Abandon cart nudge already OFF in sandbox** | 09.1.1-02 | Found under Settings > Donations > Donation options; was already disabled |
-| **Production campaign 764752 nudge status unknown** | 09.1.1-02 | Plan 03 must disable recurring nudge on production and verify abandon cart nudge |
+| **Abandon cart nudge was ON, user disabled** | 09.1.1-02 | Found under Settings > Donations > Donation options; user disabled before posting screenshot |
+| **Production campaign 764752 nudges DONE** | 09.1.1-02 | User proactively disabled both nudges on production — Plan 03 only needs theme deployment |
 
 ### Phase 5 Results (Staging Verification)
 
@@ -146,7 +146,7 @@ Stopped at: Completed 09.1.1-02-PLAN.md — Classy SDK nudges investigated and d
 **Phase 9.1.1 Plan 02 Complete:**
 - Task 1: User navigated Classy sandbox campaign 764694 dashboard
   - Recurring nudge ("Become a monthly supporter!"): WAS ON — disabled via Design tab > Recurring Nudge section
-  - Abandon cart nudge ("Make a difference!"): already OFF — Settings > Donations > Donation options
+  - Abandon cart nudge ("Make a difference!"): WAS ON — disabled by user via Settings > Donations > Donation options
 - Task 2: SKIPPED — both nudges resolved self-service, no escalation doc needed
 
 **Dashboard location correction (vs research):**
@@ -155,7 +155,7 @@ Stopped at: Completed 09.1.1-02-PLAN.md — Classy SDK nudges investigated and d
 - Actual abandon cart nudge: Settings tab > Donations > Donation options (bottom)
 
 **Next steps:**
-1. Plan 03: Disable recurring nudge on PRODUCTION campaign 764752, deploy race condition fix to production
+1. Plan 03: Deploy race condition fix to production (Classy nudges already disabled on production by user)
 
 Resume file: None
 

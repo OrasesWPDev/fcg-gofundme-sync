@@ -1,14 +1,13 @@
-# Production Launch Guide — March 9, 2026 at 6:00 AM EST
+# Production Launch Guide — March 9, 2026
 
 ## Overview
 
-This is a step-by-step chronological guide for deploying the FCG GoFundMe Pro Sync system to production. Follow each step in order. Estimated time: 45-60 minutes.
+Step-by-step guide for deploying the FCG GoFundMe Pro Sync system to production. Follow each step in order. Estimated time: 45-60 minutes.
 
 **What's being deployed:**
 - FCG GoFundMe Pro Sync plugin (v2.4.0) — syncs WordPress funds with Classy designations
 - Classy WP plugin (v1.0.0) — loads the Classy SDK script that renders donation embeds
 - Theme file changes — Classy embed on fund pages + mobile race condition fix
-- Classy dashboard settings — disable nudge popups that block mobile donations
 
 ---
 
@@ -44,11 +43,21 @@ These items are done. Verify, don't redo.
   - Recurring Nudge: OFF (Design tab > Recurring Nudge)
   - Abandon Cart Nudge: OFF (Settings > Donations > Donation options)
 - [x] Staging fully tested (all 4 mobile issues verified)
-- [x] Client testing in progress
 
 ---
 
-## Launch Steps (March 9, 6:00 AM EST)
+## Launch Steps
+
+### Step 0: Create WP Engine Backup
+
+Before touching anything, create a restore point.
+
+1. Log into WP Engine portal
+2. Navigate to **frederickcount** environment
+3. Go to **Backup points** > **Create backup**
+4. Wait for backup to complete before proceeding
+
+---
 
 ### Step 1: Update wp-config.php Production Credentials
 
@@ -81,6 +90,8 @@ Replace `YOUR_PRODUCTION_CLIENT_ID` and `YOUR_PRODUCTION_CLIENT_SECRET` with the
 
 **Verify** the block is BEFORE `require_once ABSPATH . 'wp-settings.php';` in the file.
 
+**Exit SSH** after saving.
+
 ---
 
 ### Step 2: Deploy classy-wp Plugin
@@ -111,6 +122,13 @@ rsync -avz \
   --exclude='.git' \
   --exclude='.planning' \
   --exclude='*.zip' \
+  --exclude='.env*' \
+  --exclude='.claude' \
+  --exclude='.idea' \
+  --exclude='.DS_Store' \
+  --exclude='CLAUDE.md' \
+  --exclude='README.md' \
+  --exclude='readme.txt' \
   --exclude='client-vidoes' \
   --exclude='theme-changes' \
   --exclude='docs' \
@@ -124,7 +142,9 @@ rsync -avz \
 
 ### Step 4: Deploy Theme Files
 
-Three theme changes are needed. The theme directory is `community-foundation` (not `developer`).
+Three theme changes are needed. The theme directory is `community-foundation` (NOT `developer`).
+
+**Note:** Steps 4a through 6 should be done in quick succession. Step 4a replaces the live Acceptiva donation form — fund pages will show "coming soon" until Step 6 creates the designations.
 
 #### 4a: Deploy fund-form.php
 
@@ -163,7 +183,7 @@ Should return `1`.
 
 #### 4c: Verify archive-funds.php
 
-The archive page (fund listing) should already have "Give Now" direct links instead of modal triggers. This was deployed during Phase 7. Verify:
+The archive page should have "Give Now" direct links instead of modal triggers. Verify:
 
 ```bash
 ssh frederickcount@frederickcount.ssh.wpengine.net \
@@ -171,7 +191,7 @@ ssh frederickcount@frederickcount.ssh.wpengine.net \
 ```
 
 - If `0`: Good — modals already disabled, direct links in place.
-- If non-zero: The archive page still has modal triggers. These will break with the Classy SDK. Contact Chad/developer for the updated archive-funds.php.
+- If non-zero: The archive page still has modal triggers. These will break with the Classy SDK. Deploy the updated archive-funds.php from staging.
 
 ---
 
@@ -194,23 +214,53 @@ If API Status shows an error, the production credentials in wp-config.php (Step 
 
 ---
 
-### Step 6: Initial Designation Sync
+### Step 6: Create Designations via WP-CLI
 
-This creates a Classy designation for every published fund and links it to the master campaign.
+This creates a Classy designation for every published fund and links it to the master campaign. This is what makes the Classy donation embeds work on each fund page.
 
-1. In plugin settings, click **Sync All Funds Now**
-2. This will take several minutes for 860+ funds
-3. Monitor progress in the plugin settings page
+**SSH into production:**
+```bash
+ssh frederickcount@frederickcount.ssh.wpengine.net
+cd ~/sites/frederickcount
+```
 
-**After sync completes, verify in Classy:**
+**Preview first (dry run):**
+```bash
+wp fcg-sync push --dry-run
+```
+Should show ~860 `[WOULD CREATE]` lines — one per published fund.
+
+**Create all designations:**
+```bash
+wp fcg-sync push
+```
+This takes several minutes for 860+ funds. Monitor progress output.
+
+**After push completes, verify in Classy:**
 1. Log into production Classy: `manage.classy.org`
 2. Navigate to Campaign 764752
 3. Check Program Designations — should show 860+ designations
 4. Verify designations are in the Default Active Group
+5. Check which designation is set as "default" — the last fund synced becomes the default. Reset if needed.
 
 ---
 
-### Step 7: Enable Alternate Cron
+### Step 7: Purge All Caches
+
+WP Engine has aggressive page caching. Without purging, visitors may see old cached versions of fund pages.
+
+**Option A (WP Admin):**
+WP Admin > WP Engine > General Settings > **Purge All Caches**
+
+**Option B (SSH):**
+```bash
+ssh frederickcount@frederickcount.ssh.wpengine.net \
+  "cd ~/sites/frederickcount && wp cache flush"
+```
+
+---
+
+### Step 8: Enable Alternate Cron
 
 WP Engine requires Alternate Cron for reliable scheduled tasks (inbound donation sync).
 
@@ -228,7 +278,7 @@ define('ALTERNATE_WP_CRON', true);
 
 ---
 
-### Step 8: Verify Classy Dashboard Settings
+### Step 9: Verify Classy Dashboard Settings
 
 Confirm the nudge settings you disabled earlier are still OFF on the production campaign.
 
@@ -241,7 +291,7 @@ If either was reset (e.g., from a Classy update), turn them off again.
 
 ---
 
-### Step 9: Verification Testing
+### Step 10: Verification Testing
 
 #### Fund Page Test
 - [ ] Visit any fund page (e.g., `https://frederickcountygives.org/funds/{any-fund}/`)
@@ -266,7 +316,6 @@ If either was reset (e.g., from a Classy update), turn them off again.
 - [ ] "GoFundMe Pro Sync" meta box shows:
   - Designation ID (clickable link to Classy)
   - Last Sync timestamp
-  - Donation Total, Donor Count, Goal Progress (after inbound sync runs)
 
 #### Mobile Test (on phone)
 - [ ] Open a fund page on iOS Safari
@@ -276,15 +325,15 @@ If either was reset (e.g., from a Classy update), turn them off again.
 
 ---
 
-### Step 10: Post-Launch Monitoring
+### Step 11: Post-Launch Monitoring
 
 **First hour:**
-- Check PHP error logs: `ssh frederickcount@... "tail -50 ~/sites/frederickcount/wp-content/debug.log 2>/dev/null"`
+- Check PHP error logs: `ssh frederickcount@frederickcount.ssh.wpengine.net "tail -50 ~/sites/frederickcount/wp-content/debug.log 2>/dev/null"`
 - Verify inbound sync runs (check last sync timestamps in admin)
 - Monitor Classy dashboard for any sync errors
 
 **First day:**
-- Verify cron is running (donation totals should update)
+- Verify cron is running (check last poll timestamp in plugin settings)
 - Check a few fund pages across different browsers
 - Confirm no client reports of issues
 
@@ -303,9 +352,8 @@ If critical issues occur after launch:
 
 **Full rollback (restore old donation forms):**
 1. Deactivate both plugins (above)
-2. Restore fund-form.php from WP Engine backup (restores Acceptiva form)
-3. Remove the `fcg_set_fund_designation_early` function from functions.php
-4. WP Engine backups: WP Engine portal > frederickcount > Backup points
+2. Restore from WP Engine backup created in Step 0
+3. WP Engine portal > frederickcount > Backup points > Restore the backup from before launch
 
 ---
 
@@ -329,4 +377,5 @@ If critical issues occur after launch:
 ---
 
 *Created: 2026-02-26*
-*Target launch: 2026-03-09 6:00 AM EST*
+*Updated: 2026-03-09 (pressure-tested and corrected)*
+*Target launch: 2026-03-09*

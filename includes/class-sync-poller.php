@@ -532,6 +532,23 @@ class FCG_GFM_Sync_Poller {
                         update_post_meta($post->ID, '_gofundme_designation_id', $new_id);
                         update_post_meta($post->ID, '_gofundme_last_sync', current_time('mysql'));
                         update_post_meta($post->ID, '_gofundme_sync_source', 'wordpress');
+
+                        // Link designation to master campaign (adds to active group)
+                        $master_campaign_id = $this->get_master_campaign_id();
+                        if ($master_campaign_id) {
+                            $link_result = $this->api->update_campaign($master_campaign_id, [
+                                'designation_id' => $new_id,
+                            ]);
+                            if (!$link_result['success']) {
+                                \WP_CLI::warning(sprintf(
+                                    "  [LINK FAILED] Post %d: designation %s created but not linked to campaign - %s",
+                                    $post->ID,
+                                    $new_id,
+                                    $link_result['error'] ?? 'Unknown error'
+                                ));
+                            }
+                        }
+
                         $stats['created']++;
                     } else {
                         \WP_CLI::warning(sprintf(
@@ -812,6 +829,18 @@ class FCG_GFM_Sync_Poller {
         } else {
             \WP_CLI::warning('No retries successful');
         }
+    }
+
+    /**
+     * Get master campaign ID with constant priority
+     *
+     * @return int Master campaign ID (0 if not configured)
+     */
+    private function get_master_campaign_id(): int {
+        if (defined('GOFUNDME_MASTER_CAMPAIGN_ID') && GOFUNDME_MASTER_CAMPAIGN_ID) {
+            return (int) GOFUNDME_MASTER_CAMPAIGN_ID;
+        }
+        return (int) get_option('fcg_gofundme_master_campaign_id', 0);
     }
 
     /**

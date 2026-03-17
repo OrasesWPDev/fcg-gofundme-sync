@@ -198,5 +198,62 @@ All checks green. Poller firing on schedule after cron fix.
 
 ---
 
+## Post-Launch Bug Fix — March 17, 2026
+
+### Bug Report
+
+Client reported a $250 donation from Daniel Traugh (March 14, 2026 at 12:10 PM EDT, Confirmation #174509301) was recorded against "General Fund Project" (the default designation) instead of the intended fund "Dan Richmond Music and Hope Scholarship." The donation was a memorial ("In memory of Dan Richmond"), which is how the client identified where it belonged. This was the only misrouted donation in the first week of production.
+
+### Investigation
+
+1. **Verified the fund page works correctly** — Fund ID 13656 has designation `1898361`, the race condition fix is in place, and curling the fund page confirms `?designation=1898361` is set in the URL via the `wp_head` priority 1 hook.
+
+2. **Checked the site search** — Searching for "dan richmond" on the production site revealed the root cause: the search results page (`search.php`) still used the old modal pattern (`data-toggle="modal" data-target="#fund-13656"`). Clicking "Give Now" from search results opened a modal with the Classy embed but **without** the `?designation=` URL parameter, causing the donation to default to "General Fund Project."
+
+3. **Audited all theme templates** — Found three templates still using modal triggers for fund donation:
+   - `search.php` — fund title and "Give Now" both opened modals
+   - `taxonomy-fund-category.php` — "Give Now" opened modal
+   - `template-flexible.php` — "Give Now" opened modal
+
+   `archive-funds.php` was the only template fixed during the March 10 launch.
+
+### Root Cause
+
+The `fcg_set_fund_designation_early()` race condition fix runs on `is_singular('funds')` — it only fires on individual fund pages. Any path that renders the Classy donation form outside of a singular fund page (modals on search, taxonomy, or flexible template pages) bypasses the designation parameter, causing donations to default to "General Fund Project."
+
+The donor likely searched for the fund on the site, clicked "Give Now" from search results, and completed the donation through the modal — never visiting the actual fund page where the designation would have been set.
+
+### Fix Applied
+
+Replaced modal triggers with direct permalink links in all three templates, matching the pattern used in the `archive-funds.php` fix from launch:
+
+| Template | Change |
+|----------|--------|
+| `search.php` | Fund title: modal → permalink. "Give Now": modal → permalink. Removed "Learn More" (redundant). Removed `fund-modal` include. |
+| `taxonomy-fund-category.php` | "Give Now": modal → permalink. Removed `fund-modal` include. |
+| `template-flexible.php` | "Give Now": modal → permalink. Removed `fund-modal` include. |
+
+All "Give Now" buttons now route donors to the individual fund page, where the `?designation=` parameter is set correctly before the Classy embed loads.
+
+### Deployment
+
+- Deployed to staging: 2026-03-17
+- Tested on staging: search results confirmed showing direct permalink links
+- Deployed to production: 2026-03-17
+- Verified on production: `curl` confirmed no modal triggers in search results, "Give Now" links to fund permalink
+
+### Verification
+
+```
+# Before fix (production search results):
+<a data-toggle="modal" data-target="#fund-13656">Give Now</a>
+
+# After fix:
+<a class="btn-link" rel="bookmark" href="https://www.frederickcountygives.org/funds/dan-richmond-music-and-hope-scholarship/">Give Now</a>
+```
+
+---
+
 *Launch completed: 2026-03-10*
 *Report created: 2026-03-10*
+*Updated: 2026-03-17 (post-launch bug fix — modal triggers in search/taxonomy/flexible templates)*
